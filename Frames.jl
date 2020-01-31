@@ -16,11 +16,11 @@ struct Frame{Tx, Tν}
 end
 
 # A tangent vector (ẋ, ν̇) ∈ 𝑇ᵤF(ℳ)
-struct TangentVector{Tx,Tν}
+struct TangentFrame{Tx,Tν}
     u::Frame
     ẋ::Tx
     ν̇::Tν
-    function TangentVector(u, ẋ::Tx, ν̇::Tν) where {Tx, Tν <: AbstractArray}
+    function TangentFrame(u, ẋ::Tx, ν̇::Tν) where {Tx, Tν <: AbstractArray}
         new{Tx,Tν}(u, ẋ, ν̇)
     end
 end
@@ -29,6 +29,7 @@ end
     Some generic functions for calculations on F(ℳ)
 """
 
+# Theoretically, these do not exist, used for numerical calculations
 Base.:+(u::Frame{Tx, Tν}, v::Frame{Tx, Tν}) where {Tx, Tν} = Frame(u.x + v.x , u.ν .+ v.ν)
 Base.:-(u::Frame{Tx, Tν}, v::Frame{Tx, Tν}) where {Tx, Tν} = Frame(u.x - v.x , u.ν .- v.ν)
 Base.:-(u::Frame{Tx, Tν}) where {Tx, Tν} = Frame(-u.x , -u.ν)
@@ -38,22 +39,22 @@ Base.zero(u::Frame{Tx, Tν}) where {Tx, Tν} = Frame(zero(u.x), one(u.ν))
 
 Base.:*(u::Frame{Tx, Tν}, y::Tx) where {Tx,Tν} = Frame(y.*u.x, y.*u.ν)
 
-function Base.:+(X::TangentVector{Tx, Tν}, Y::TangentVector{Tx,Tν}) where {Tx,Tν}
+function Base.:+(X::TangentFrame{Tx, Tν}, Y::TangentFrame{Tx,Tν}) where {Tx,Tν}
     if X.u != Y.u
         error("Vectors are in different tangent spaces")
     end
-    return TangentVector(X.u, X.ẋ + Y.ẋ, X.ν̇ + Y.ν̇)
+    return TangentFrame(X.u, X.ẋ + Y.ẋ, X.ν̇ + Y.ν̇)
 end
 
-function Base.:-(X::TangentVector{Tx, Tν}, Y::TangentVector{Tx,Tν}) where {Tx,Tν}
+function Base.:-(X::TangentFrame{Tx, Tν}, Y::TangentFrame{Tx,Tν}) where {Tx,Tν}
     if X.u != Y.u
         error("Vectors are in different tangent spaces")
     end
-    return TangentVector(X.u, X.ẋ - Y.ẋ, X.ν̇ - Y.ν̇)
+    return TangentFrame(X.u, X.ẋ - Y.ẋ, X.ν̇ - Y.ν̇)
 end
 
 # this function should be the exponential map on F(ℳ)
-function Base.:+(u::Frame{Tx, Tν}, X::TangentVector{Tx, Tν}) where {Tx,Tν}
+function Base.:+(u::Frame{Tx, Tν}, X::TangentFrame{Tx, Tν}) where {Tx,Tν}
     if X.u != u
         error("X is not tangent to u")
     end
@@ -64,16 +65,16 @@ end
 Π(u::Frame{Tx, Tν}) where {Tx,Tν} = u.x
 
 # Pushforward map of the canonocal projection
-Πˣ(X::TangentVector{Tx, Tν}) where {Tx, Tν} = X.ẋ
+Πˣ(X::TangentFrame{Tx, Tν}) where {Tx, Tν} = X.ẋ
 
 # The group action of a frame on ℝᵈ
 FrameAction(u::Frame{Tx, Tν}, e::T) where {Tx,Tν,T<:AbstractArray} = u.ν*e
 
 # Horizontal lift of the orthogonal projection
-Pˣ(u::Frame, ℳ::T) where {T<:EmbeddedManifold} = TangentVector(u, u.x, P(u.x, ℳ))
+Pˣ(u::Frame, ℳ::T) where {T<:EmbeddedManifold} = TangentFrame(u, u.x, P(u.x, ℳ))
 
 # Horizontal vector field
-H(i::Int64, u::Frame, ℳ::T) where {T<:EmbeddedManifold} = Frame(u.x, Pˣ(u, ℳ)[:,i])
+H(i::Int64, u::Frame, ℳ::T) where {T<:EmbeddedManifold} = TangentFrame(u, u.x, Pˣ(u, ℳ)[:,i])
 
 """
     Now let us create a stochastic process on the frame bundle of the 2-sphere 𝕊²

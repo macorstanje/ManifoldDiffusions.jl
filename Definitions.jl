@@ -13,6 +13,7 @@ const ℝ{N} = SVector{N, Float64}
 const IndexedTime = Tuple{Int64,Float64}
 outer(x) = x*x'
 outer(x,y) = x*y'
+extractcomp(v, i) = map(x->x[i], v)
 
 """
     EmbeddedManifold creates a manifold ``M = f^{-1}({0})`` of dimension d=N-n
@@ -160,26 +161,7 @@ end
 function Γ(q::T, ℳ::TM) where {T<:AbstractArray, TM<:EmbeddedManifold}
     d = length(q)
     ∂g = reshape(ForwardDiff.jacobian(x -> g(x,ℳ), q), d, d, d)
-    g⁻¹ = gˣ(x, ℳ)
+    g⁻¹ = gˣ(q, ℳ)
     @einsum out[i,j,k] := .5*g⁻¹[i,l]*(∂g[k,l,i] + ∂g[l,j,k] - ∂g[j,k,l])
     return out
 end
-
-using Bridge
-
-struct SphereDiffusion <: ContinuousTimeProcess{ℝ{2}}
-    𝕊::Sphere
-end
-
-function Bridge.b(t, x, P::SphereDiffusion)
-    g⁻¹ = gˣ(x, ℳ)
-    Γ = Γ(x,P.𝕊)
-    @einsum out[i] := -.5*g⁻¹[j,k]* Γ[i,j,k]
-    return out
-end
-Bridge.σ(t, x, P::SphereDiffusion) = sqrt(gˣ(x,P.𝕊))
-
-ℙ = SphereDiffusion(Sphere(1.0))
-W = sample(0:dt:T, Wiener{ℝ{2}}())
-x₀ = [0.,1.,0.]
-X = solve(Euler(), x₀, W, ℙ)
