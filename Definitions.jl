@@ -23,7 +23,7 @@ extractcomp(v, i) = map(x->x[i], v)
 abstract type EmbeddedManifold <: Manifold end
 
 """
-    Elements of 𝑇ₓℳ
+    Elements of 𝑇ₓℳ and some operations
 """
 
 # a vector v ∈ 𝑇ₓℳ
@@ -49,6 +49,12 @@ function Base.:-(X::TangentVector{T,TM}, Y::TangentVector{T,TM}) where {T,TM}
     end
     return TangentVector(X.v-Y.v, x, ℳ)
 end
+
+
+"""
+    We introduce some manifolds embedded in ℝ³, given by f⁻¹({0}) and
+    parameterized by ℝ² ⊇ (u,v) ↦ F(u,v) ⊆ ℝ³
+"""
 
 """
     Settings for the sphere 𝕊²
@@ -165,3 +171,8 @@ function Γ(q::T, ℳ::TM) where {T<:AbstractArray, TM<:EmbeddedManifold}
     @einsum out[i,j,k] := .5*g⁻¹[i,l]*(∂g[k,l,i] + ∂g[l,j,k] - ∂g[j,k,l])
     return out
 end
+
+# Hamiltonian
+function Hamiltonian(x::Tx, p::Tp, ℳ::TM) where {Tx, Tp <: AbstractArray, TM <: EmbeddedManifold}
+    .5*p'*gˣ(x, ℳ)*p
+ end

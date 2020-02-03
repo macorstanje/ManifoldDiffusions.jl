@@ -73,8 +73,22 @@ FrameAction(u::Frame{Tx, Tν}, e::T) where {Tx,Tν,T<:AbstractArray} = u.ν*e
 # Horizontal lift of the orthogonal projection
 Pˣ(u::Frame, ℳ::T) where {T<:EmbeddedManifold} = TangentFrame(u, u.x, P(u.x, ℳ))
 
+"""
+    Horizontal vector fields
+"""
+
+# Horizontal vector (a tangent frame) corresponding to the i'th unit vector
+function Hor(i::Int64, u::Frame, ℳ::TM) where {TM<:EmbeddedManifold}
+    x, ν = u.x, u.ν
+    _Γ = Γ(u.x, ℳ)
+    @einsum dν[i,k,m] := -ν[i,j]*ν[l,m]*_Γ[k,j,l]
+    return TangentFrame(u, ν[i], dν[i,:,:])
+end
+
 # Horizontal vector field
-H(i::Int64, u::Frame, ℳ::T) where {T<:EmbeddedManifold} = TangentFrame(u, u.x, Pˣ(u, ℳ)[:,i])
+# Hor(i::Int64, u::Frame, ℳ::T) where {T<:EmbeddedManifold} = TangentFrame(u, u.x, Pˣ(u, ℳ)[:,i])
+
+
 
 """
     Now let us create a stochastic process on the frame bundle of the 2-sphere 𝕊²
