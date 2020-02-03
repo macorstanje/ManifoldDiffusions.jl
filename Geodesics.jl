@@ -1,41 +1,12 @@
 include("Definitions.jl")
 
-using DifferentialEquations
 
 """
     generate geodesics γ: I -> ℳ satisfying γ₀ = x ∈ ℳ and γ̇₀ = v ∈ 𝑇ₓℳ
 """
 
-# Evaluates the geodesic at time t using a second order ODE
-function Geodesic(x, v, t, ℳ)
-    function GeodesicEquation(du,u,p,t)
-        _Γ = Γ(u, ℳ)
-        @einsum out[i] := -_Γ[i,j,k]*du[j]*du[k]
-        out
-    end
-
-    tspan = (0.,t)
-    prob = SecondOrderODEProblem(GeodesicEquation, v, x, tspan)
-    sol = DifferentialEquations.solve(prob, Vern7())
-    return sol
-end
-
-
-𝕊 = Sphere(1.0)
-sol = Geodesic([1.,1.], [1.,0.] , 1.0 , 𝕊)
-
-using Plots
-u = extractcomp(sol.u,3)
-v = extractcomp(sol.u,4)
-Plots.plot([u,v])
-x = extractcomp([F([u[i], v[i]], 𝕊) for i in 1:length(u)], 1)
-y = extractcomp([F([u[i], v[i]], 𝕊) for i in 1:length(u)], 2)
-z = extractcomp([F([u[i], v[i]], 𝕊) for i in 1:length(u)], 3)
-Plots.plot([x,y,z])
-
 using Bridge
 include("SpherePlots.jl") ; plotly()
-SpherePlot(x,y,z,𝕊)
 
 x₀ = F([0., 0.], 𝕊)
 v₀ = [1,-1,0]

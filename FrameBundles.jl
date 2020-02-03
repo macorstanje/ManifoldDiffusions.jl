@@ -26,8 +26,8 @@ function solve!(::StratonovichEuler, Y, u::Frame, W::Bridge.SamplePath, ℙ::Fra
         dt = tt[k+1] - tt[k]
         dw = ww[k+1] - ww[k]
         yy[.., k] = y
-        yᴱ = y + Bridge.H(y, ℙ)*dw
-        y = y + .5*(Bridge.H(yᴱ, ℙ) + Bridge.H(y, ℙ))*dw
+        yᴱ = y + sum([Hor(i,y, ℙ)*dw[i] for i in 1:length(dw)])
+        y = y + .5*sum([(Hor(i,yᴱ, ℙ) + Hor(i,y, ℙ))*dw[i] for i in 1:length(dw)])
     end
     yy[..,N] = endpoint(y, P)
     Y
@@ -47,8 +47,8 @@ function solve!(::StratonovichEuler, Y, u::Frame, W::Bridge.AbstractPath, P::Fra
 
     for (k, t, dt, dw) in increments(W)
         yy[.., k] = y
-        yᴱ = y + Bridge.H(y, ℙ)*dw
-        y = y + .5*(Bridge.H(yᴱ, ℙ) + Bridge.H(y, ℙ))*dw
+        yᴱ = y + Hor(y, ℙ)*dw
+        y = y + .5*(Hor(yᴱ, ℙ) + Hor(y, ℙ))*dw
     end
     yy[.., N] = endpoint(y, P)
     Y
