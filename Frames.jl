@@ -84,11 +84,10 @@ Pˣ(u::Frame, ℳ::T) where {T<:EmbeddedManifold} = TangentFrame(u, u.x, P(u.x, 
 """
     Horizontal vector fields
 """
-
 # Horizontal vector (a tangent frame) corresponding to the i'th unit vector
 function Hor(i::Int64, u::Frame, ℳ::TM) where {TM<:EmbeddedManifold}
     x, ν = u.x, u.ν
-    _Γ = Γ(u.x, ℳ)
+    _Γ = Γ(x, ℳ)
     @einsum dν[i,k,m] := -ν[i,j]*ν[l,m]*_Γ[k,j,l]
     return TangentFrame(u, ν[:,i], dν[i,:,:])
 end
@@ -104,10 +103,29 @@ Hor(1,u₀,𝕊)
         dUt = H(Ut)∘dWt
 """
 
-function StochasticDevelopment(dW, u::Frame)
+function IntegrateStep(dW, u::Frame, ℳ)
     x, ν = u.x, u.ν
-    # NOT FINISHED
+    uᴱ = u + sum([Hor(i, u,ℳ)*dW[i] for i in 1:length(dW)])
+    y = u + sum([(Hor(i,uᴱ,ℳ) + Hor(i, u,ℳ))*dW[i]*0.5 for i in 1:length(dW)])
+    return y
 end
+
+StochasticDevelopment(W, u₀, ℳ) = let X = Bridge.samplepath(W.tt, zero(u₀)); StochasticDevelopment!(X, W, u₀,ℳ); X end
+function StochasticDevelopment!(Y, W, u₀, ℳ)
+    tt = W.tt
+    ww = W.yy
+    yy = Y.yy
+
+    y::typeof(u₀) = u₀
+    for k in 1:length(tt)-1
+        dw = ww[k+1] - ww[k]
+        yy[..,k] = y
+        y = IntegrateStep(dw, y, ℳ)
+    end
+    yy[..,length(tt)] = y
+    Y
+end
+
 """
     Now let us create a stochastic process on the frame bundle of the 2-sphere 𝕊²
 """
@@ -124,22 +142,19 @@ struct SphereDiffusion <: FrameBundleProcess
     end
 end
 
-Hor(i, u, ℙ::SphereDiffusion) = Hor(i, u, ℙ.𝕊)
-Bridge.constdiff(::SphereDiffusion) = false
-
 𝕊 = Sphere(1.0)
 ℙ = SphereDiffusion(𝕊)
 
 x₀ = [0.,0]
-u₀ = Frame(x₀, [1. 0.5 ; 0.5 1.])
+u₀ = Frame(x₀, [1. 0; 0 1.])
 
 T = 1.0
 dt = 1/1000
 τ(T) = (x) -> x*(2-x/T)
 tt = τ(T).(0.:dt:T)
 W = sample(0:dt:T, Wiener{ℝ{2}}())
-U = solve(StratonovichEuler(), u₀, W, ℙ)
-X  = map(y -> F(y.x,𝕊), U.yy)
+U = StochasticDevelopment(W, u₀, 𝕊)
+X  = map(y -> F(Π(y), 𝕊), U.yy)
 
 plot([extractcomp(X,1), extractcomp(X,2), extractcomp(X,3)])
 
@@ -150,15 +165,15 @@ SpherePlot(extractcomp(X,1), extractcomp(X,2), extractcomp(X,3), 𝕊)
 
 function SimulatePoints(n, u₀, ℙ::SphereDiffusion)
     out = Frame[]
-    it = 0
     while length(out) < n
-        W = sample(0.:dt:T, Wiener{ℝ{3}}())
-        U = solve(StratonovichEuler(),u₀, W, ℙ)
+        W = sample(0.:dt:T, Wiener{ℝ{2}}())
+        U = StochasticDevelopment(W, u₀, ℙ.𝕊)
         push!(out, U.yy[end])
     end
     return out
 end
 
-@time ξ = SimulatePoints(1000, u₀, ℙ)
+@time Ξ = SimulatePoints(1000, u₀, ℙ)
 
-SphereScatterPlot(extractcomp(Π.(ξ),1), extractcomp(Π.(ξ),2), extractcomp(Π.(ξ),3), x₀, 𝕊 )
+ξ = map(y->F(Π(y), 𝕊), Ξ)
+SphereScatterPlot(extractcomp(ξ ,1), extractcomp(ξ,2), extractcomp(ξ,3), F(x₀,𝕊), 𝕊 )

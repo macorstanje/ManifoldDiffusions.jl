@@ -5,7 +5,6 @@ mutable struct Increments{S<:Bridge.AbstractPath}
 end
 
 iterate(dX::Increments, i = 1) = i + 1 > length(dX.X.tt) ? nothing : ((i, dX.X.tt[i], dX.X.tt[i+1]-dX.X.tt[i], dX.X.yy[.., i+1]-dX.X.yy[.., i]), i + 1)
-
 increments(X::Bridge.AbstractPath) = Increments(X)
 endpoint(y, P) = y
 

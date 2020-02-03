@@ -154,13 +154,15 @@ end
 
 # Riemannian metric in terms of Stereographical projection
 function g(q::T, ℳ::TM) where {T<:AbstractArray, TM<:EmbeddedManifold}
-    J = ForwardDiff.jacobian((p) -> F(p, ℳ), q)
-    return J'*J
+    # J = ForwardDiff.jacobian(p -> F(p, ℳ), q)
+    # return J'*J
+    [4/(q[1]^2+q[2]^2+1)^2 0 ; 0 4/(q[1]^2+q[2]^2+1)^2]
 end
 
 # Returns the cometric
 function gˣ(q::T, ℳ::TM) where {T<:AbstractArray, TM<:EmbeddedManifold}
-    return inv(g(q, ℳ))
+    # return inv(g(q, ℳ))
+    [(q[1]^2+q[2]^2+1)^2/4 0 ; 0 (q[1]^2+q[2]^2+1)^2/4]
 end
 
 # Christoffel symbols Γ^i_{jk}
