@@ -147,6 +147,10 @@ function P(x::T, ℙ::Paraboloid) where {T<:AbstractArray}
     return Matrix{eltype(n)}(I,3,3) .- n*n'
 end
 
+function F(q::T, ℙ::Paraboloid) where {T<:AbstractArray}
+    a, b, u, v = ℙ.a, ℙ.b, q[1], q[2]
+    return [u, v, (u/a)^2+(v/b)^2]
+end
 """
     If a manifold is given as result of a function F:ℝᵈ → ℝᴺ, we obtain a
     Riemannian metric and Christoffel symbols for the Levi-Civita connection
@@ -154,15 +158,15 @@ end
 
 # Riemannian metric in terms of Stereographical projection
 function g(q::T, ℳ::TM) where {T<:AbstractArray, TM<:EmbeddedManifold}
-    # J = ForwardDiff.jacobian(p -> F(p, ℳ), q)
-    # return J'*J
-    [4/(q[1]^2+q[2]^2+1)^2 0 ; 0 4/(q[1]^2+q[2]^2+1)^2]
+    J = ForwardDiff.jacobian(p -> F(p, ℳ), q)
+    return J'*J
+    # [4/(q[1]^2+q[2]^2+1)^2 0 ; 0 4/(q[1]^2+q[2]^2+1)^2]
 end
 
 # Returns the cometric
 function gˣ(q::T, ℳ::TM) where {T<:AbstractArray, TM<:EmbeddedManifold}
-    # return inv(g(q, ℳ))
-    [(q[1]^2+q[2]^2+1)^2/4 0 ; 0 (q[1]^2+q[2]^2+1)^2/4]
+    return inv(g(q, ℳ))
+    # [(q[1]^2+q[2]^2+1)^2/4 0 ; 0 (q[1]^2+q[2]^2+1)^2/4]
 end
 
 # Christoffel symbols Γ^i_{jk}

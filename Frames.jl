@@ -110,6 +110,8 @@ function IntegrateStep(dW, u::Frame, ℳ)
     return y
 end
 
+using Bridge
+
 StochasticDevelopment(W, u₀, ℳ) = let X = Bridge.samplepath(W.tt, zero(u₀)); StochasticDevelopment!(X, W, u₀,ℳ); X end
 function StochasticDevelopment!(Y, W, u₀, ℳ)
     tt = W.tt
@@ -130,20 +132,7 @@ end
     Now let us create a stochastic process on the frame bundle of the 2-sphere 𝕊²
 """
 
-# Functions for solving SDEs on the frame bundle
-using Bridge
-include("FrameBundles.jl")
-
-struct SphereDiffusion <: FrameBundleProcess
-    𝕊::Sphere
-
-    function SphereDiffusion(𝕊::Sphere)
-        new(𝕊)
-    end
-end
-
 𝕊 = Sphere(1.0)
-ℙ = SphereDiffusion(𝕊)
 
 x₀ = [0.,0]
 u₀ = Frame(x₀, [1. 0; 0 1.])
@@ -156,11 +145,10 @@ W = sample(0:dt:T, Wiener{ℝ{2}}())
 U = StochasticDevelopment(W, u₀, 𝕊)
 X  = map(y -> F(Π(y), 𝕊), U.yy)
 
-plot([extractcomp(X,1), extractcomp(X,2), extractcomp(X,3)])
-
 using Plots
-include("Sphereplots.jl")
-plotly()
+plot(U.tt, [extractcomp(X,1), extractcomp(X,2), extractcomp(X,3)])
+
+include("Sphereplots.jl"); plotly()
 SpherePlot(extractcomp(X,1), extractcomp(X,2), extractcomp(X,3), 𝕊)
 
 function SimulatePoints(n, u₀, ℙ::SphereDiffusion)
@@ -177,3 +165,21 @@ end
 
 ξ = map(y->F(Π(y), 𝕊), Ξ)
 SphereScatterPlot(extractcomp(ξ ,1), extractcomp(ξ,2), extractcomp(ξ,3), F(x₀,𝕊), 𝕊 )
+
+"""
+    Now let us create a stochastic process on the frame bundle of the paraboloid
+"""
+
+ℙ = Paraboloid(1.0, 1.0)
+
+x₀ = [1.0,1.0]
+u₀ = Frame(x₀, [1. 0. ; 0. 1.])
+
+W = sample(0:dt:T, Wiener{ℝ{2}}())
+U = StochasticDevelopment(W, u₀, ℙ)
+X  = map(y -> F(Π(y), ℙ), U.yy)
+
+plot(U.tt, [extractcomp(X,1), extractcomp(X,2), extractcomp(X,3)])
+
+include("ParaboloidPlots.jl")
+ParaboloidPlot(extractcomp(X,1), extractcomp(X,2), extractcomp(X,3), ℙ)

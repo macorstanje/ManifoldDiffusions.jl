@@ -116,7 +116,7 @@ function SphereFullPlot(θ, data, target, 𝕊::Sphere; PlotUpdates = true)
     if PlotUpdates
         Plots.plot!(extractcomp(θ,1), extractcomp(θ,2), extractcomp(θ,3),
                     seriestype = :scatter,
-                    color = palette(:default)[1],
+                    color = :yellow,
                     markersize = 2,
                     label = "Updates")
     end
