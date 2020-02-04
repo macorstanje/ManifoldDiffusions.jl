@@ -92,10 +92,6 @@ function Hor(i::Int64, u::Frame, ℳ::TM) where {TM<:EmbeddedManifold}
     return TangentFrame(u, ν[:,i], dν[i,:,:])
 end
 
-# Horizontal vector field
-# Hor(i::Int64, u::Frame, ℳ::T) where {T<:EmbeddedManifold} = TangentFrame(u, u.x, Pˣ(u, ℳ)[:,i])
-
-Hor(1,u₀,𝕊)
 """
     Stochastic development
 
@@ -132,54 +128,57 @@ end
     Now let us create a stochastic process on the frame bundle of the 2-sphere 𝕊²
 """
 
-𝕊 = Sphere(1.0)
+# UNCOMMENT TO TRY SIMULATING PATHS
 
-x₀ = [0.,0]
-u₀ = Frame(x₀, [1. 0; 0 1.])
 
-T = 1.0
-dt = 1/1000
-τ(T) = (x) -> x*(2-x/T)
-tt = τ(T).(0.:dt:T)
-W = sample(0:dt:T, Wiener{ℝ{2}}())
-U = StochasticDevelopment(W, u₀, 𝕊)
-X  = map(y -> F(Π(y), 𝕊), U.yy)
-
-using Plots
-plot(U.tt, [extractcomp(X,1), extractcomp(X,2), extractcomp(X,3)])
-
-include("Sphereplots.jl"); plotly()
-SpherePlot(extractcomp(X,1), extractcomp(X,2), extractcomp(X,3), 𝕊)
-
-function SimulatePoints(n, u₀, ℙ::SphereDiffusion)
-    out = Frame[]
-    while length(out) < n
-        W = sample(0.:dt:T, Wiener{ℝ{2}}())
-        U = StochasticDevelopment(W, u₀, ℙ.𝕊)
-        push!(out, U.yy[end])
-    end
-    return out
-end
-
-@time Ξ = SimulatePoints(1000, u₀, ℙ)
-
-ξ = map(y->F(Π(y), 𝕊), Ξ)
-SphereScatterPlot(extractcomp(ξ ,1), extractcomp(ξ,2), extractcomp(ξ,3), F(x₀,𝕊), 𝕊 )
-
-"""
-    Now let us create a stochastic process on the frame bundle of the paraboloid
-"""
-
-ℙ = Paraboloid(1.0, 1.0)
-
-x₀ = [1.0,1.0]
-u₀ = Frame(x₀, [1. 0. ; 0. 1.])
-
-W = sample(0:dt:T, Wiener{ℝ{2}}())
-U = StochasticDevelopment(W, u₀, ℙ)
-X  = map(y -> F(Π(y), ℙ), U.yy)
-
-plot(U.tt, [extractcomp(X,1), extractcomp(X,2), extractcomp(X,3)])
-
-include("ParaboloidPlots.jl")
-ParaboloidPlot(extractcomp(X,1), extractcomp(X,2), extractcomp(X,3), ℙ)
+# 𝕊 = Sphere(1.0)
+#
+# x₀ = [0.,0]
+# u₀ = Frame(x₀, [1. 0; 0 3.])
+#
+# T = 1.0
+# dt = 1/1000
+# τ(T) = (x) -> x*(2-x/T)
+# tt = τ(T).(0.:dt:T)
+# W = sample(0:dt:T, Wiener{ℝ{2}}())
+# U = StochasticDevelopment(W, u₀, 𝕊)
+# X  = map(y -> F(Π(y), 𝕊), U.yy)
+#
+# using Plots
+# plot(U.tt, [extractcomp(X,1), extractcomp(X,2), extractcomp(X,3)])
+#
+# include("Sphereplots.jl"); plotly()
+# SpherePlot(extractcomp(X,1), extractcomp(X,2), extractcomp(X,3), 𝕊)
+#
+# function SimulatePoints(n, u₀, ℙ::SphereDiffusion)
+#     out = Frame[]
+#     while length(out) < n
+#         W = sample(0.:dt:T, Wiener{ℝ{2}}())
+#         U = StochasticDevelopment(W, u₀, ℙ.𝕊)
+#         push!(out, U.yy[end])
+#     end
+#     return out
+# end
+#
+# @time Ξ = SimulatePoints(1000, u₀, ℙ)
+#
+# ξ = map(y->F(Π(y), 𝕊), Ξ)
+# SphereScatterPlot(extractcomp(ξ ,1), extractcomp(ξ,2), extractcomp(ξ,3), F(x₀,𝕊), 𝕊 )
+#
+# """
+#     Now let us create a stochastic process on the frame bundle of the paraboloid
+# """
+#
+# ℙ = Paraboloid(2.0, 1.0)
+#
+# x₀ = [1.0,1.0]
+# u₀ = Frame(x₀, [1. 0. ; 0. 2.])
+#
+# W = sample(0:dt:T, Wiener{ℝ{2}}())
+# U = StochasticDevelopment(W, u₀, ℙ)
+# X  = map(y -> F(Π(y), ℙ), U.yy)
+#
+# plot(U.tt, [extractcomp(X,1), extractcomp(X,2), extractcomp(X,3)])
+#
+# include("ParaboloidPlots.jl")
+# ParaboloidPlot(extractcomp(X,1), extractcomp(X,2), extractcomp(X,3), ℙ)

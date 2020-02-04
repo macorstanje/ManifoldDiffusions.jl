@@ -21,6 +21,8 @@ function ParaboloidPlot(X::T,Y::T,Z::T, ℙ::Paraboloid) where {T<:AbstractArray
                     linewidth = 2.5,
                     color = palette(:default)[1],
                     legend = false,
+                    xlims = (minimum([x y]), maximum([x y])),
+                    ylims = (minimum([x y]), maximum([x y])),
                     label = "X",
                     xlabel = "x",
                     ylabel = "y",
