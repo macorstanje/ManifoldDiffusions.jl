@@ -11,27 +11,7 @@ end
     Riemannian structure on the Frame bundle
 """
 
-# returns a matrix of size d+d² × d+d²
-# function g(u::Frame, Fℳ::FrameBundle{TM}) where {TM}
-#     ν , ℳ, d = u.ν, Fℳ.ℳ, length(u.x)
-#     δ = Matrix{eltype(u.x)}(I,d, d)
-#     @einsum W⁻¹[i,j] := δ[α,β]*ν[α,i]*ν[β, j]
-#     _Γ = Γ(u.x, ℳ)
-#     @einsum Gamma[j, i, α] := _Γ[i,j,k]*ν[α, k]
-#     Ga = reshape(Gamma, d^2, d)
-#     return [W⁻¹ -W⁻¹*Ga' ; -Ga*W⁻¹ Ga*W⁻¹*Ga']
-# end
-
-# Action of g on tangent frames, conform Anisotropic covariance paper by somer et al.
-# function g(X::TangentFrame, Y::TangentFrame, Fℳ::FrameBundle{TM}) where {TM}
-#     if X.u != Y.u
-#         error("Vectors are in different tangent spaces")
-#     end
-#     d = length(X.ẋ)
-#     qX = vcat(X.ẋ, vec(reshape(X.ν̇, d^2, 1)))
-#     qY = vcat(Y.ẋ, vec(reshape(Y.ν̇, d^2, 1)))
-#     return qX'*g(X.u, Fℳ)*qY
-# end
+# Riemannian cometric on the Frame bundle
 Σ(u::Frame, v::T, w::T) where {T<:AbstractArray} = dot(inv(u.ν)*v , inv(u.ν)*w)
 function g(X::TangentFrame, Y::TangentFrame)
         if X.u != Y.u
@@ -40,13 +20,11 @@ function g(X::TangentFrame, Y::TangentFrame)
     return Σ(X.u, Πˣ(X), Πˣ(Y))
 end
 
-u = Frame([rand(),rand()], [rand() 0. ; 0. rand()])
-i,j = 1,2
-g(Hor(i, u, ℳ), Hor(j, u, ℳ))
-
-function gˣ(u::Frame, Fℳ::FrameBundle{TM}) where {TM}
-    return inv(g(u, Fℳ))
-end
+# Test; should be 1_{i=i}
+# ℳ = Sphere(1.0)
+# u = Frame([rand(),rand()], [rand() 0. ; 0. rand()])
+# i,j = 1,2
+# g(Hor(i, u, ℳ), Hor(j, u, ℳ))
 
 # Christoffel Symbols
 function Γ(u::Frame, Fℳ::FrameBundle{TM}) where {TM}
@@ -59,8 +37,10 @@ end
 
 # Hamiltonian
 function Hamiltonian(u::Frame, p::TangentFrame, Fℳ::FrameBundle{TM}) where {TM}
-    P = vcat(p.ẋ, vec(reshape(p.ν̇, d^2, 1)))
-    return .5*P'*gˣ(u, Fℳ)*P
+    if p.u != u
+        error("p is not tangent to u")
+    end
+    return .5*g(p,p)
 end
 
 # Hamiltonian as functions of two vectors of size d+d^2
@@ -87,13 +67,18 @@ function Geodesic(u₀::Frame, v₀::TangentFrame, tt, Fℳ::FrameBundle{TM}) wh
     return uu, vv
 end
 
-tt = collect(0:0.01:1.0)
-u₀ = Frame([0.,0.], [1. 0. ; 0. 1.])
-v₀ = TangentFrame(u₀, [1.,0.] , [2. 0. ; 0. 2.])
-
-𝕊 = Sphere(1.0)
-F𝕊 = FrameBundle(𝕊)
-
-Geodesic(u₀, v₀, tt, F𝕊)
-
-g(u₀, F𝕊)
+# Code to test it
+#
+# tt = collect(0:0.01:1.0)
+# u₀ = Frame([0.,0.], [1. 0. ; 0. 1.])
+# v₀ = TangentFrame(u₀, [1.,0.] , [2. 0. ; 0. 2.])
+#
+# 𝕊 = Sphere(1.0)
+# F𝕊 = FrameBundle(𝕊)
+#
+# uu, vv = Geodesic(u₀, v₀, tt, F𝕊)
+# XX = map(y -> F(Π(y), 𝕊), uu)
+#
+# using Plots
+# include("Sphereplots.jl"); plotly()
+# SpherePlot(extractcomp(XX,1), extractcomp(XX,2), extractcomp(XX,3), 𝕊)
