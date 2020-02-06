@@ -118,6 +118,11 @@ function P(x::T, 𝕋::Torus) where {T<:AbstractArray}
     return Matrix{eltype(n)}(I,3,3) .- n*n'
 end
 
+function F(x::T, 𝕋::Torus) where {T<:AbstractArray}
+    R, r, u, v = 𝕋.R, 𝕋.r, x[1], x[2]
+    return [(R+r*cos(u))*cos(v) , (R+r*cos(u))*sin(v) , r*sin(u)]
+end
+
 
 """
     Settings for the Paraboloid ℙ²

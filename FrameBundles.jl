@@ -114,7 +114,6 @@ end
 
 # UNCOMMENT TO TRY SIMULATING PATHS
 
-F([1.,0.], 𝕊)
 𝕊 = Sphere(1.0)
 
 x₀ = [0.,0]
@@ -133,6 +132,27 @@ plot(U.tt, [extractcomp(X,1), extractcomp(X,2), extractcomp(X,3)])
 
 include("Sphereplots.jl"); plotly()
 SpherePlot(extractcomp(X,1), extractcomp(X,2), extractcomp(X,3), 𝕊)
+
+
+𝕋 = Torus(2.0,1.0)
+x₀ = [0.,0]
+u₀ = Frame(x₀, [1. 0; 0 1.])
+
+T = 1.0
+dt = 1/1000
+τ(T) = (x) -> x*(2-x/T)
+tt = τ(T).(0.:dt:T)
+W = sample(0:dt:T, Wiener{ℝ{2}}())
+U = StochasticDevelopment(W, u₀, 𝕋)
+X  = map(y -> F(Π(y), 𝕋), U.yy)
+
+using Plots
+plot(U.tt, [extractcomp(X,1), extractcomp(X,2), extractcomp(X,3)])
+
+include("Torusplots.jl"); plotly()
+TorusPlot(extractcomp(X,1), extractcomp(X,2), extractcomp(X,3), 𝕋)
+
+
 #
 # function SimulatePoints(n, u₀, ℙ::SphereDiffusion)
 #     out = Frame[]
