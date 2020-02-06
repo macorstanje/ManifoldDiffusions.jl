@@ -20,21 +20,6 @@ function g(X::TangentFrame, Y::TangentFrame)
     return Σ(X.u, Πˣ(X), Πˣ(Y))
 end
 
-# Test; should be 1_{i=i}
-# ℳ = Sphere(1.0)
-# u = Frame([rand(),rand()], [rand() 0. ; 0. rand()])
-# i,j = 1,2
-# g(Hor(i, u, ℳ), Hor(j, u, ℳ))
-
-# Christoffel Symbols
-function Γ(u::Frame, Fℳ::FrameBundle{TM}) where {TM}
-    d = length(u.x)
-    ∂g = reshape(ForwardDiff.jacobian(x -> g(x, Fℳ)), d+d^2, d+d^2, d+d^2)
-    g⁻¹ = gˣ(u, Fℳ)
-    @einsum out[i,j,k] := .5*g⁻¹[i,l]*(∂g[k,l,i] + ∂g[l,j,k] - ∂g[j,k,l])
-    return out
-end
-
 # Hamiltonian
 function Hamiltonian(u::Frame, p::TangentFrame, Fℳ::FrameBundle{TM}) where {TM}
     if p.u != u
@@ -58,13 +43,20 @@ end
 include("Geodesics.jl")
 
 function Geodesic(u₀::Frame, v₀::TangentFrame, tt, Fℳ::FrameBundle{TM}) where {TM}
-    d = length(u.x)
+    d = length(u₀.x)
     U₀ = vcat(u₀.x, vec(reshape(u₀.ν, d^2, 1)))
     V₀ = vcat(v₀.ẋ, vec(reshape(v₀.ν̇, d^2, 1)))
     xx, pp = Integrate(Hamiltonian, tt, U₀, V₀, Fℳ)
     uu = map(x->Frame(x[1:d] , reshape(x[d+1:d+d^2], d, d)) , xx)
-    vv = map(p->TangentFrame(u, p[1:d], reshape(p[d+1:d+d^2], d, d)), pp)
+    vv = map(p->TangentFrame(u₀, p[1:d], reshape(p[d+1:d+d^2], d, d)), pp)
     return uu, vv
+end
+
+# Exponential map in the frame bundle
+function ExponentialMap(u₀::Frame, v₀::TangentFrame, Fℳ::FrameBundle{TM}) where {TM}
+    tt = collect(0:0.01:1)
+    uu, vv = Geodesic(u₀, v₀, tt, Fℳ)
+    return uu[end]
 end
 
 # Code to test it
@@ -82,3 +74,95 @@ end
 # using Plots
 # include("Sphereplots.jl"); plotly()
 # SpherePlot(extractcomp(XX,1), extractcomp(XX,2), extractcomp(XX,3), 𝕊)
+
+
+"""
+    Stochastic development
+
+    Simulate the process {Ut} on F(ℳ) given by the SDE
+        dUt = H(Ut)∘dWt
+"""
+
+function IntegrateStep(dW, u::Frame, ℳ)
+    x, ν = u.x, u.ν
+    uᴱ = ExponentialMap(u, sum([Hor(i, u,ℳ)*dW[i] for i in 1:length(dW)]), FrameBundle(ℳ))
+    y = ExponentialMap(u, sum([(Hor(i,uᴱ,ℳ) + Hor(i, u,ℳ))*dW[i]*0.5 for i in 1:length(dW)]), FrameBundle(ℳ))
+    return y
+end
+
+using Bridge
+
+StochasticDevelopment(W, u₀, ℳ) = let X = Bridge.samplepath(W.tt, zero(u₀)); StochasticDevelopment!(X, W, u₀,ℳ); X end
+function StochasticDevelopment!(Y, W, u₀, ℳ)
+    tt = W.tt
+    ww = W.yy
+    yy = Y.yy
+
+    y::typeof(u₀) = u₀
+    for k in 1:length(tt)-1
+        dw = ww[k+1] - ww[k]
+        yy[..,k] = y
+        y = IntegrateStep(dw, y, ℳ)
+    end
+    yy[..,length(tt)] = y
+    Y
+end
+
+"""
+    Now let us create a stochastic process on the frame bundle of the 2-sphere 𝕊²
+"""
+
+# UNCOMMENT TO TRY SIMULATING PATHS
+
+F([1.,0.], 𝕊)
+𝕊 = Sphere(1.0)
+
+x₀ = [0.,0]
+u₀ = Frame(x₀, [1. 0; 0 1.])
+
+T = 1.0
+dt = 1/1000
+τ(T) = (x) -> x*(2-x/T)
+tt = τ(T).(0.:dt:T)
+W = sample(0:dt:T, Wiener{ℝ{2}}())
+U = StochasticDevelopment(W, u₀, 𝕊)
+X  = map(y -> F(Π(y), 𝕊), U.yy)
+
+using Plots
+plot(U.tt, [extractcomp(X,1), extractcomp(X,2), extractcomp(X,3)])
+
+include("Sphereplots.jl"); plotly()
+SpherePlot(extractcomp(X,1), extractcomp(X,2), extractcomp(X,3), 𝕊)
+#
+# function SimulatePoints(n, u₀, ℙ::SphereDiffusion)
+#     out = Frame[]
+#     while length(out) < n
+#         W = sample(0.:dt:T, Wiener{ℝ{2}}())
+#         U = StochasticDevelopment(W, u₀, ℙ.𝕊)
+#         push!(out, U.yy[end])
+#     end
+#     return out
+# end
+#
+# @time Ξ = SimulatePoints(1000, u₀, ℙ)
+#
+# ξ = map(y->F(Π(y), 𝕊), Ξ)
+# SphereScatterPlot(extractcomp(ξ ,1), extractcomp(ξ,2), extractcomp(ξ,3), F(x₀,𝕊), 𝕊 )
+#
+# """
+#     Now let us create a stochastic process on the frame bundle of the paraboloid
+# """
+#
+# ℙ = Paraboloid(2.0, 1.0)
+#
+# x₀ = [1.0,1.0]
+# u₀ = Frame(x₀, [1. 0. ; 0. 2.])
+#
+# W = sample(0:dt:T, Wiener{ℝ{2}}())
+# U = StochasticDevelopment(W, u₀, ℙ)
+# X  = map(y -> F(Π(y), ℙ), U.yy)
+#
+# plot(U.tt, [extractcomp(X,1), extractcomp(X,2), extractcomp(X,3)])
+#
+# include("ParaboloidPlots.jl")
+# ParaboloidPlot(extractcomp(X,1), extractcomp(X,2), extractcomp(X,3), ℙ)
