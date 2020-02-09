@@ -85,8 +85,8 @@ end
 
 function IntegrateStep(dW, u::Frame, ℳ)
     x, ν = u.x, u.ν
-    uᴱ = ExponentialMap(u, sum([Hor(i, u,ℳ)*dW[i] for i in 1:length(dW)]), FrameBundle(ℳ))
-    y = ExponentialMap(u, sum([(Hor(i,uᴱ,ℳ) + Hor(i, u,ℳ))*dW[i]*0.5 for i in 1:length(dW)]), FrameBundle(ℳ))
+    uᴱ = ExponentialMap(u, sum([Hor(i, u,ℳ)*dW[i] for i in eachindex(dW)]), FrameBundle(ℳ))
+    y = ExponentialMap(u, sum([(Hor(i,uᴱ,ℳ) + Hor(i, u,ℳ))*dW[i]*0.5 for i in eachindex(dW)]), FrameBundle(ℳ))
     return y
 end
 

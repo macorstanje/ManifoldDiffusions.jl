@@ -71,20 +71,48 @@ struct Sphere{T<:Real} <: EmbeddedManifold
     end
 end
 
-function f(x::T, 𝕊::Sphere) where {T<:AbstractArray}
-    x[1]^2+x[2]^2+x[3]^2-𝕊.R^2
+function f(q::T, 𝕊::Sphere) where {T<:AbstractArray}
+    q[1]^2+q[2]^2+q[3]^2-𝕊.R^2
 end
 
 # Projection matrix
-function P(x::T, 𝕊::Sphere) where {T<:AbstractArray}
-    R, x, y, z = 𝕊.R, x[1], x[2], x[3]
-    return [R^2-x^2 -x*y -x*z ; -x*y R^2-y^2 -y*z ; -x*z -y*z R^2-z^2]
+function P(q::T, 𝕊::Sphere) where {T<:AbstractArray}
+    R, x, y, z = 𝕊.R, q[1], q[2], q[3]
+    return [4*R^2-x^2 -x*y -x*z ; -x*y 4*R^2-y^2 -y*z ; -x*z -y*z 4*R^2-z^2]./(4*R^2)
 end
 
 # Stereographical projection
 function F(q::T, 𝕊::Sphere) where {T<:AbstractArray}
     R, u, v = 𝕊.R, q[1], q[2]
     return [ 2*u/(u^2+v^2+1) , 2*v/(u^2+v^2+1) , (u^2+v^2-1)/(u^2+v^2+1)  ]
+end
+
+"""
+    Settings for the circle 𝕊¹
+"""
+
+struct Circle{T<:Real} <: EmbeddedManifold
+    R::T
+
+    function Circle(R::T) where {T<:Real}
+        if R<=0
+            error("R must be positive")
+        end
+        new{T}(R)
+    end
+end
+
+function f(q::T, ℂ::Circle) where {T<:AbstractArray}
+    q[1]^2+q[2]^2 -ℂ.R^2
+end
+
+function P(q::T, ℂ::Circle) where {T<:AbstractArray}
+    R, x, y = ℂ.R, q[1], q[2]
+    return [4*R^2-x^2 -x*y ; -x*y 4*R^2-y^2]./4R^2
+end
+
+function F(θ::T, ℂ::Circle) where {T<:Real}
+    [cos(θ), sin(θ)]
 end
 
 """
@@ -168,6 +196,12 @@ function g(q::T, ℳ::TM) where {T<:AbstractArray, TM<:EmbeddedManifold}
     # [4/(q[1]^2+q[2]^2+1)^2 0 ; 0 4/(q[1]^2+q[2]^2+1)^2]
 end
 
+function g(q::T, ℳ::TM) where {T<:Real, TM<:EmbeddedManifold}
+    J = ForwardDiff.derivative(p -> F(p, ℳ), q)
+    return J'*J
+    # [4/(q[1]^2+q[2]^2+1)^2 0 ; 0 4/(q[1]^2+q[2]^2+1)^2]
+end
+
 # Returns the cometric
 function gˣ(q::T, ℳ::TM) where {T<:AbstractArray, TM<:EmbeddedManifold}
     return inv(g(q, ℳ))
@@ -182,6 +216,15 @@ function Γ(q::T, ℳ::TM) where {T<:AbstractArray, TM<:EmbeddedManifold}
     @einsum out[i,j,k] := .5*g⁻¹[i,l]*(∂g[k,l,i] + ∂g[l,j,k] - ∂g[j,k,l])
     return out
 end
+
+# For a 1-dimensional manifold
+function Γ(q::T, ℳ::TM) where {T<:Real, TM<:EmbeddedManifold}
+    ∂g = ForwardDiff.derivative(x -> g(x,ℳ), q)
+    g⁻¹ = 1/g(q, ℳ)
+    @einsum out[i,j,k] := .5*g⁻¹[i,l]*(∂g[k,l,i] + ∂g[l,j,k] - ∂g[j,k,l])
+    return out
+end
+
 
 # Hamiltonian
 function Hamiltonian(x::Tx, p::Tp, ℳ::TM) where {Tx, Tp <: AbstractArray, TM <: EmbeddedManifold}

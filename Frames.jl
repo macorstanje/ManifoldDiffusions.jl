@@ -88,6 +88,10 @@ Pˣ(u::Frame, ℳ::T) where {T<:EmbeddedManifold} = TangentFrame(u, u.x, P(u.x, 
 function Hor(i::Int64, u::Frame, ℳ::TM) where {TM<:EmbeddedManifold}
     x, ν = u.x, u.ν
     _Γ = Γ(x, ℳ)
-    @einsum dν[i,k,m] := -ν[i,j]*ν[l,m]*_Γ[k,j,l]
-    return TangentFrame(u, ν[:,i], dν[i,:,:])
+    if length(x)>1
+        @einsum dν[i,k,m] := -ν[i,j]*ν[l,m]*_Γ[k,j,l]
+        return TangentFrame(u, ν[:,i], dν[i,:,:])
+    else
+        return TangentFrame(u, ν, -ν^2*_Γ)
+    end
 end
