@@ -1,5 +1,6 @@
 abstract type FrameBundleProcess end
 include("Frames.jl")
+include("Geodesics.jl")
 
 # The frame bundle over a manifold ℳ
 struct FrameBundle{TM} <: EmbeddedManifold
@@ -37,27 +38,6 @@ function Hamiltonian(x::Tx, p::Tp, Fℳ::FrameBundle{TM}) where {Tx, Tp<:Abstrac
     return Hamiltonian(u, P, Fℳ)
 end
 
-"""
-    Geodesic flow on the frame bundle
-"""
-include("Geodesics.jl")
-
-function Geodesic(u₀::Frame, v₀::TangentFrame, tt, Fℳ::FrameBundle{TM}) where {TM}
-    d = length(u₀.x)
-    U₀ = vcat(u₀.x, vec(reshape(u₀.ν, d^2, 1)))
-    V₀ = vcat(v₀.ẋ, vec(reshape(v₀.ν̇, d^2, 1)))
-    xx, pp = Integrate(Hamiltonian, tt, U₀, V₀, Fℳ)
-    uu = map(x->Frame(x[1:d] , reshape(x[d+1:d+d^2], d, d)) , xx)
-    vv = map(p->TangentFrame(u₀, p[1:d], reshape(p[d+1:d+d^2], d, d)), pp)
-    return uu, vv
-end
-
-# Exponential map in the frame bundle
-function ExponentialMap(u₀::Frame, v₀::TangentFrame, Fℳ::FrameBundle{TM}) where {TM}
-    tt = collect(0:0.01:1)
-    uu, vv = Geodesic(u₀, v₀, tt, Fℳ)
-    return uu[end]
-end
 
 # Code to test it
 #
@@ -134,9 +114,9 @@ include("Sphereplots.jl"); plotly()
 SpherePlot(extractcomp(X,1), extractcomp(X,2), extractcomp(X,3), 𝕊)
 
 
-𝕋 = Torus(2.0,1.0)
+𝕋 = Torus(4.0,1.0)
 x₀ = [0.,0]
-u₀ = Frame(x₀, [1. 0; 0 1.])
+u₀ = Frame(x₀, [1/sqrt(2) 1/sqrt(2); 1/sqrt(2) -1/sqrt(2)])
 
 T = 1.0
 dt = 1/1000
@@ -151,7 +131,6 @@ plot(U.tt, [extractcomp(X,1), extractcomp(X,2), extractcomp(X,3)])
 
 include("Torusplots.jl"); plotly()
 TorusPlot(extractcomp(X,1), extractcomp(X,2), extractcomp(X,3), 𝕋)
-
 
 #
 # function SimulatePoints(n, u₀, ℙ::SphereDiffusion)
