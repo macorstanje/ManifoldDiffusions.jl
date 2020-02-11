@@ -27,7 +27,7 @@ function Integrate(H, tt, x₀::Tx, p₀::Tp, ℳ::TM) where {Tx, Tp <:AbstractA
 end
 
 function Geodesic(x₀::Tx, v₀::Tv, tt, ℳ::TM) where {Tx, Tv <: AbstractArray, TM<:EmbeddedManifold}
-    xx, vv = Integrate(Hamiltonian, , tt, x₀, v₀, ℳ)
+    xx, vv = Integrate(Hamiltonian, tt, x₀, v₀, ℳ)
     return xx, vv
 end
 
@@ -45,7 +45,7 @@ function Geodesic(u₀::Frame, v₀::TangentFrame, tt, Fℳ::FrameBundle{TM}) wh
     d = length(u₀.x)
     U₀ = vcat(u₀.x, vec(reshape(u₀.ν, d^2, 1)))
     V₀ = vcat(v₀.ẋ, vec(reshape(v₀.ν̇, d^2, 1)))
-    xx, pp = Geodesic(Hamiltonian, tt, U₀, V₀, Fℳ)
+    xx, pp = Integrate(Hamiltonian, tt, U₀, V₀, Fℳ)
     uu = map(x->Frame(x[1:d] , reshape(x[d+1:d+d^2], d, d)) , xx)
     vv = map(p->TangentFrame(u₀, p[1:d], reshape(p[d+1:d+d^2], d, d)), pp)
     return uu, vv

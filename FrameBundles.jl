@@ -1,12 +1,12 @@
 include("Definitions.jl")
 include("Frames.jl")
-include("Geodesics.jl")
-
 # The frame bundle over a manifold ℳ
 struct FrameBundle{TM} <: EmbeddedManifold
     ℳ::TM
     FrameBundle(ℳ::TM) where {TM<:EmbeddedManifold} = new{TM}(ℳ)
 end
+
+include("Geodesics.jl")
 
 """
     Riemannian structure on the Frame bundle
@@ -38,24 +38,6 @@ function Hamiltonian(x::Tx, p::Tp, Fℳ::FrameBundle{TM}) where {Tx, Tp<:Abstrac
     return Hamiltonian(u, P, Fℳ)
 end
 
-
-# Code to test it
-#
-# tt = collect(0:0.01:1.0)
-# u₀ = Frame([0.,0.], [1. 0. ; 0. 1.])
-# v₀ = TangentFrame(u₀, [1.,0.] , [2. 0. ; 0. 2.])
-#
-# 𝕊 = Sphere(1.0)
-# F𝕊 = FrameBundle(𝕊)
-#
-# uu, vv = Geodesic(u₀, v₀, tt, F𝕊)
-# XX = map(y -> F(Π(y), 𝕊), uu)
-#
-# using Plots
-# include("Sphereplots.jl"); plotly()
-# SpherePlot(extractcomp(XX,1), extractcomp(XX,2), extractcomp(XX,3), 𝕊)
-
-
 """
     Stochastic development
 
@@ -70,8 +52,8 @@ function IntegrateStep(dW, u::Frame, ℳ)
     return y
 end
 
-using Bridge
 
+using Bridge
 StochasticDevelopment(W, u₀, ℳ) = let X = Bridge.samplepath(W.tt, zero(u₀)); StochasticDevelopment!(X, W, u₀,ℳ); X end
 function StochasticDevelopment!(Y, W, u₀, ℳ)
     tt = W.tt
@@ -97,7 +79,7 @@ end
 𝕊 = Sphere(1.0)
 
 x₀ = [0.,0]
-u₀ = Frame(x₀, [1. 0; 0 1.])
+u₀ = Frame(x₀, [1/sqrt(2) 1/sqrt(2); 1/sqrt(2) -1/sqrt(2)])
 
 T = 1.0
 dt = 1/1000
@@ -113,7 +95,7 @@ plot(U.tt, [extractcomp(X,1), extractcomp(X,2), extractcomp(X,3)])
 include("Sphereplots.jl"); plotly()
 SpherePlot(extractcomp(X,1), extractcomp(X,2), extractcomp(X,3), 𝕊)
 
-
+# Torus
 𝕋 = Torus(4.0,1.0)
 x₀ = [0.,0]
 u₀ = Frame(x₀, [1/sqrt(2) 1/sqrt(2); 1/sqrt(2) -1/sqrt(2)])
@@ -132,22 +114,22 @@ plot(U.tt, [extractcomp(X,1), extractcomp(X,2), extractcomp(X,3)])
 include("Torusplots.jl"); plotly()
 TorusPlot(extractcomp(X,1), extractcomp(X,2), extractcomp(X,3), 𝕋)
 
-#
-# function SimulatePoints(n, u₀, ℙ::SphereDiffusion)
-#     out = Frame[]
-#     while length(out) < n
-#         W = sample(0.:dt:T, Wiener{ℝ{2}}())
-#         U = StochasticDevelopment(W, u₀, ℙ.𝕊)
-#         push!(out, U.yy[end])
-#     end
-#     return out
-# end
-#
-# @time Ξ = SimulatePoints(1000, u₀, ℙ)
-#
-# ξ = map(y->F(Π(y), 𝕊), Ξ)
-# SphereScatterPlot(extractcomp(ξ ,1), extractcomp(ξ,2), extractcomp(ξ,3), F(x₀,𝕊), 𝕊 )
-#
+
+function SimulatePoints(n, u₀, ℳ::TM) where {TM <: EmbeddedManifold}
+    out = Frame[]
+    while length(out) < n
+        W = sample(0.:dt:T, Wiener{ℝ{2}}())
+        U = StochasticDevelopment(W, u₀, ℳ)
+        push!(out, U.yy[end])
+    end
+    return out
+end
+
+@time Ξ = SimulatePoints(10, u₀, 𝕊)
+
+ξ = map(y->F(Π(y), 𝕊), Ξ)
+SphereScatterPlot(extractcomp(ξ ,1), extractcomp(ξ,2), extractcomp(ξ,3), F(x₀,𝕊), 𝕊 )
+
 # """
 #     Now let us create a stochastic process on the frame bundle of the paraboloid
 # """
