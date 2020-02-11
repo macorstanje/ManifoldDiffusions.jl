@@ -1,4 +1,4 @@
-abstract type FrameBundleProcess end
+include("Definitions.jl")
 include("Frames.jl")
 include("Geodesics.jl")
 

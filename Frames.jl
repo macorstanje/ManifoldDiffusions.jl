@@ -1,4 +1,3 @@
-include("Definitions.jl")
 """
     Elements of F(ℳ) consist of a position x and a GL(d, ℝ)-matrix ν that
     represents a basis for 𝑇ₓℳ
