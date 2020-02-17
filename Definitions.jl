@@ -50,6 +50,36 @@ function Base.:-(X::TangentVector{T,TM}, Y::TangentVector{T,TM}) where {T,TM}
     return TangentVector(X.v-Y.v, x, ℳ)
 end
 
+"""
+Settings for an ellipse 𝔼 as subset of ℝ²
+"""
+
+struct Ellipse{T<:Real} <: EmbeddedManifold
+    a::T
+    b::T
+
+    function Ellipse(a::T, b::T) where {T<:Real}
+        if a<=0 || b<=0
+            error("a and b must be positive")
+        end
+        new{T}(a,b)
+    end
+end
+
+function f(q::T, 𝔼::Ellipse) where {T<:AbstractArray}
+    (q[1]/𝔼.a)^2 + (q[2]/𝔼.b)^2 - 1.0
+end
+
+function P(q::T, 𝔼::Ellipse) where {T<:AbstractArray}
+    x, y, a, b = q[1], q[2], 𝔼.a, 𝔼.b
+    ∇f = 2.0.*[x/(a^2) , y/(b^2)]
+    n = ∇f./norm(∇f)
+    return Matrix{eltype(n)}(I,2,2) - n*n'
+end
+
+function F(θ::T, 𝔼::Ellipse) where {T<:Real}
+    [𝔼.a*cos.(θ) , 𝔼.b*sin.(θ)]
+end
 
 """
     We introduce some manifolds embedded in ℝ³, given by f⁻¹({0}) and
@@ -85,34 +115,6 @@ end
 function F(q::T, 𝕊::Sphere) where {T<:AbstractArray}
     R, u, v = 𝕊.R, q[1], q[2]
     return [ 2*u/(u^2+v^2+1) , 2*v/(u^2+v^2+1) , (u^2+v^2-1)/(u^2+v^2+1)  ]
-end
-
-"""
-    Settings for the circle 𝕊¹
-"""
-
-struct Circle{T<:Real} <: EmbeddedManifold
-    R::T
-
-    function Circle(R::T) where {T<:Real}
-        if R<=0
-            error("R must be positive")
-        end
-        new{T}(R)
-    end
-end
-
-function f(q::T, ℂ::Circle) where {T<:AbstractArray}
-    q[1]^2+q[2]^2 -ℂ.R^2
-end
-
-function P(q::T, ℂ::Circle) where {T<:AbstractArray}
-    R, x, y = ℂ.R, q[1], q[2]
-    return [4*R^2-x^2 -x*y ; -x*y 4*R^2-y^2]./4R^2
-end
-
-function F(θ::T, ℂ::Circle) where {T<:Real}
-    [cos(θ), sin(θ)]
 end
 
 """
@@ -189,44 +191,40 @@ end
     Riemannian metric and Christoffel symbols for the Levi-Civita connection
 """
 
-# Riemannian metric in terms of Stereographical projection
-function g(q::T, ℳ::TM) where {T<:AbstractArray, TM<:EmbeddedManifold}
-    J = ForwardDiff.jacobian(p -> F(p, ℳ), q)
-    return J'*J
-    # [4/(q[1]^2+q[2]^2+1)^2 0 ; 0 4/(q[1]^2+q[2]^2+1)^2]
-end
-
-function g(q::T, ℳ::TM) where {T<:Real, TM<:EmbeddedManifold}
-    J = ForwardDiff.derivative(p -> F(p, ℳ), q)
+# Riemannian metric in terms of a parameterization F
+function g(q::T, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
+    if length(q) == 1
+        J = ForwardDiff.derivative((p) -> F(p, ℳ), q)
+    else
+        J = ForwardDiff.jacobian((p) -> F(p, ℳ), q)
+    end
     return J'*J
     # [4/(q[1]^2+q[2]^2+1)^2 0 ; 0 4/(q[1]^2+q[2]^2+1)^2]
 end
 
 # Returns the cometric
-function gˣ(q::T, ℳ::TM) where {T<:AbstractArray, TM<:EmbeddedManifold}
+function gˣ(q::T, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
     return inv(g(q, ℳ))
     # [(q[1]^2+q[2]^2+1)^2/4 0 ; 0 (q[1]^2+q[2]^2+1)^2/4]
 end
 
 # Christoffel symbols Γ^i_{jk}
-function Γ(q::T, ℳ::TM) where {T<:AbstractArray, TM<:EmbeddedManifold}
+function Γ(q::T, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
     d = length(q)
-    ∂g = reshape(ForwardDiff.jacobian(x -> g(x,ℳ), q), d, d, d)
-    g⁻¹ = gˣ(q, ℳ)
-    @einsum out[i,j,k] := .5*g⁻¹[i,l]*(∂g[k,l,i] + ∂g[l,j,k] - ∂g[j,k,l])
-    return out
-end
-
-# For a 1-dimensional manifold
-function Γ(q::T, ℳ::TM) where {T<:Real, TM<:EmbeddedManifold}
-    ∂g = ForwardDiff.derivative(x -> g(x,ℳ), q)
-    g⁻¹ = 1/g(q, ℳ)
-    @einsum out[i,j,k] := .5*g⁻¹[i,l]*(∂g[k,l,i] + ∂g[l,j,k] - ∂g[j,k,l])
-    return out
+    if d == 1
+        ∂g = ForwardDiff.derivative(x -> g(x,ℳ), q)
+        g⁻¹ = 1/g(q, ℳ)
+        return .5*g⁻¹*∂g
+    else
+        ∂g = reshape(ForwardDiff.jacobian(x -> g(x,ℳ), q), d, d, d)
+        g⁻¹ = gˣ(q, ℳ)
+        @einsum out[i,j,k] := .5*g⁻¹[i,l]*(∂g[k,l,i] + ∂g[l,j,k] - ∂g[j,k,l])
+        return out
+    end
 end
 
 
 # Hamiltonian
-function Hamiltonian(x::Tx, p::Tp, ℳ::TM) where {Tx, Tp <: AbstractArray, TM <: EmbeddedManifold}
+function Hamiltonian(x::Tx, p::Tp, ℳ::TM) where {Tx, Tp <: Union{AbstractArray, Real}, TM <: EmbeddedManifold}
     .5*p'*gˣ(x, ℳ)*p
  end

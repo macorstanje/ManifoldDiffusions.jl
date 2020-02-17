@@ -6,7 +6,7 @@
 struct Frame{Tx, Tν}
     x::Tx
     ν::Tν
-    function Frame(x::Tx, ν::Tν) where {Tx, Tν <: AbstractArray}
+    function Frame(x::Tx, ν::Tν) where {Tx, Tν <: Union{AbstractArray, Real}}
         # if rank(ν) != length(x)
         #     error("A is not of full rank")
         # end
@@ -19,7 +19,7 @@ struct TangentFrame{Tx,Tν}
     u::Frame
     ẋ::Tx
     ν̇::Tν
-    function TangentFrame(u, ẋ::Tx, ν̇::Tν) where {Tx, Tν <: AbstractArray}
+    function TangentFrame(u, ẋ::Tx, ν̇::Tν) where {Tx, Tν <: Union{AbstractArray, Real}}
         new{Tx,Tν}(u, ẋ, ν̇)
     end
 end
@@ -75,7 +75,7 @@ end
 Πˣ(X::TangentFrame{Tx, Tν}) where {Tx, Tν} = X.ẋ
 
 # The group action of a frame on ℝᵈ
-FrameAction(u::Frame{Tx, Tν}, e::T) where {Tx,Tν,T<:AbstractArray} = u.ν*e
+FrameAction(u::Frame{Tx, Tν}, e::T) where {Tx,Tν,T<:Union{AbstractArray, Real}} = u.ν*e
 
 # Horizontal lift of the orthogonal projection
 Pˣ(u::Frame, ℳ::T) where {T<:EmbeddedManifold} = TangentFrame(u, u.x, P(u.x, ℳ))
