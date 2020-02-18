@@ -67,7 +67,10 @@ On the sphere, one can construct frames and tangent frames as follows
 ## Horizontal lift
 The horizontal lift is, in local coordinates, given by
 
-<img src="https://render.githubusercontent.com/render/math?math=H_i(u)\nu_i^j\frac{\partial}{\partial x^j}-\nu_i^j\nu_m^l\frac{\partial}{\partial \nu_m^k}">
+<img src="https://render.githubusercontent.com/render/math?math=H_i(u)=\nu_i^j\frac{\partial}{\partial x^j}-\nu_i^j\nu_m^l\frac{\partial}{\partial \nu_m^k}">
+
+![\Large H_i(u)=\nu_i^j\frac{\partial}{\partial x^j}-\nu_i^j\nu_m^l\frac{\partial}{\partial \nu_m^k}](https://latex.codecogs.com/svg.latex?x%3D%5Cfrac%7B-b%5Cpm%5Csqrt%7Bb%5E2-4ac%7D%7D%7B2a%7D)
+
 
 This is implemented through the function
 ```@docs
