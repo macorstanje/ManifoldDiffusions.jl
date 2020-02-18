@@ -1,7 +1,3 @@
-using ForwardDiff
-using LinearAlgebra
-using StaticArrays
-using Einsum
 
 abstract type Manifold end
 abstract type SDEForm end

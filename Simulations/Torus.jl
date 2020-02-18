@@ -1,12 +1,6 @@
-using Distributions
-using Plots
-using Bridge
-using CSV, ProgressMeter, GeometryTypes, DataFrames
 
-
-include("Definitions.jl")
-include("TorusPlots.jl")
-include("GuidedProposals.jl")
+include("../src/Manifolds.jl")
+include("../GuidedProposals/GuidedProposals.jl")
 
 T = 1.0
 dt = 1/1000

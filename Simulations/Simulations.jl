@@ -1,14 +1,9 @@
-include("Definitions.jl")
-include("Frames.jl")
-include("Geodesics.jl")
-include("FrameBundles.jl")
-
-using Plots
+include("../src/Manifolds.jl")
 
 """
     On the Ellipse
 """
-𝔼 = Ellipse(1.0,2.0)
+𝔼 = Ellipse(2.0,1.0)
 
 # Parallel transport
 tt = collect(0:0.01:0.5)
@@ -32,6 +27,7 @@ function line(q, p) # tangent vector p to a point q
     [q[1].+p[1].*t  q[2].+p[2].*t]
 end
 
+plotly()
 fig = plot(extractcomp(total,1), extractcomp(total, 2), label = "Ellipse")
 plot!(fig, extractcomp(γ,1), extractcomp(γ, 2) , label = "γ")
 for i in 0:1:10
@@ -39,9 +35,9 @@ for i in 0:1:10
 end
 fig
 
-
+# Stochastic Horizontal Development
 c₀ = 0.
-u₀ = Frame(c₀, 1.0)
+u₀ = Frame(c₀, -1.0)
 
 T = 1.0
 dt = 1/1000
@@ -52,9 +48,12 @@ U = StochasticDevelopment(W, u₀, 𝔼)
 X  = map(y -> F(Π(y), 𝔼), U.yy)
 
 plot(U.tt, [extractcomp(X,1), extractcomp(X,2)])
-
+plot(U.tt, Π.(U.yy))
 plot(extractcomp(total,1), extractcomp(total, 2), label = "Ellipse")
 plot!(extractcomp(X,1), extractcomp(X,2))
+
+sum(diff(Π.(U.yy)).^2)
+
 """
     On the Sphere
 """
@@ -74,7 +73,6 @@ X  = map(y -> F(Π(y), 𝕊), U.yy)
 
 plot(U.tt, [extractcomp(X,1), extractcomp(X,2), extractcomp(X,3)])
 
-include("Sphereplots.jl"); plotly()
 SpherePlot(extractcomp(X,1), extractcomp(X,2), extractcomp(X,3), 𝕊)
 
 """

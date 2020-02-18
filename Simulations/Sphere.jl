@@ -1,9 +1,6 @@
-using Distributions
-using Plots
-using Bridge
 
-include("Definitions.jl")
-include("SpherePlots.jl")
+
+include("../scr/Manifolds.jl")
 
 T = 1.0
 dt = 1/1000
