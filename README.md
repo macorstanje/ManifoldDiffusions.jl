@@ -9,8 +9,8 @@ Manifolds embedded in a Euclidean space are subtypes of the EmbeddedManifold typ
   - A matrix-valued function P( , ℳ) that takes an array 𝓍 as input and outputs the projection matrix of the ambient space onto the tangent space at 𝓍.
   - A function F( , ℳ) that transforms local coordinates to points in the ambient space.
 
-  Using these properties, one derives the Riemannian metric
-  <img src="https://latex.codecogs.com/svg.latex?\Large&space;g(x, \mathcal{M})=dF(x,\mathcal{M})\dF(x,\mathcal{M})" title="\Large x=\frac{-b\pm\sqrt{b^2-4ac}}{2a}" />
+Using these properties, one derives the Riemannian metric
+<img src="https://render.githubusercontent.com/render/math?math=g(x,\mathcal{M}) = \mathrm{d}F(x,\mathcal{M})'\mathrm{d}F(x,\mathcal{M})'">
 
-  $$ g(𝓍, ℳ) = dF(𝓍, ℳ)' dF(𝓍, ℳ) $$
-  and the cometric gˣ = g⁻¹.
+
+g(𝓍, ℳ) = dF(𝓍, ℳ)' dF(𝓍, ℳ) and the cometric gˣ = g⁻¹.
