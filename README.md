@@ -33,7 +33,7 @@ The unit sphere is equipped with the southern sterograpgical projection by defau
 ```
 
 # Geodesics and Parallel Transport
-In Geodesics.jl, a sympletic integrator is implemented for the Hamiltonian system that describes geodesics. Given a discretized time  ```tt```, an initial point```q₀``` on the manifold ```ℳ``` and initial velocity ```v₀```. Calling function  
+In Geodesics.jl, a sympletic integrator is implemented for the Hamiltonian system that describes geodesics. Given a discretized time  ```tt```, an initial point```q₀``` on the manifold ```ℳ``` and initial velocity ```v₀```. Calling the function  
 
 ```@docs
 qq, vv = Geodesic(q₀, v₀, tt, ℳ)
@@ -43,3 +43,34 @@ returns both the trajectory on ℳ and the trajectory on the tangent bundle. Thi
 ```@docs
 ExponentialMap(q₀, v₀, ℳ)
 ```
+
+# Frames, Frame bundles and Stochastic development
+The structure ```Frame``` is defined through a tuple ```(x,ν)```, where x is an array of size d and ν is a d×d-matrix that represents a basis for 𝑇ₓℳ. Given a Frame ```u```, we also define elements in 𝑇ᵤF(ℳ) through a triple ```(u, ẋ, ν̇)``` where  ```ẋ``` is a vector of size d representing a tangent vector to ℳ and ```ν̇``` is a matrix of size d×d. Elementary rules of calculation are defined for tangent frames and frames.
+
+On the sphere, one can construct frames and tangent frames as follows
+```@docs
+  𝕊 = Sphere(1.0)
+  q = [0.,0.]
+
+  # A frame at q with standard basis (in the local chart)
+  u = Frame(q, [1. 0. ; 0. 1.])
+
+  # q is obtained by
+  u.x
+  # ν is obtained by
+  u.ν
+
+  # Equivalent to u.x, one can use the canonical projection map Π
+  Π(u) # returns u.x
+```
+
+## Horizontal lift
+The horizontal lift is, in local coordinates, given by
+
+<img src="https://render.githubusercontent.com/render/math?math=H_i(u)\nu_i^j\frac{\partial}{\partial x^j}-\nu_i^j\nu_m^l\frac{\partial}{\partial \nu_m^k}">
+
+This is implemented through the function
+```@docs
+Hor(i, u, ℳ)
+```
+that returns a TangentFrame to ```u```.
