@@ -10,5 +10,5 @@ Manifolds embedded in a Euclidean space are subtypes of the EmbeddedManifold typ
   - A function F( , ℳ) that transforms local coordinates to points in the ambient space.
 
   Using these properties, one derives the Riemannian metric
-  \[ g(𝓍, ℳ) = dF(𝓍, ℳ)'dF(𝓍, ℳ) \]
-  and the cometric gˣ = g⁻¹. 
+  $$ g(𝓍, ℳ) = dF(𝓍, ℳ)' dF(𝓍, ℳ) $$
+  and the cometric gˣ = g⁻¹.
