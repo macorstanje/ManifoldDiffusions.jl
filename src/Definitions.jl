@@ -24,27 +24,33 @@ abstract type EmbeddedManifold <: Manifold end
 
 # a vector v ∈ 𝑇ₓℳ
 struct TangentVector{T,TM}
-    v::T
     x::T
+    v::T
     ℳ::TM
     function TangentVector(v::T, x::T, ℳ::TM) where {T<:AbstractArray, TM<:EmbeddedManifold}
-        new{T,TM}(v,x,ℳ)
+        new{T,TM}(x, v,ℳ)
     end
 end
 
+# Vector space operations on 𝑇ₓℳ
 function Base.:+(X::TangentVector{T,TM}, Y::TangentVector{T,TM}) where {T,TM}
     if X.x != Y.x || X.ℳ != Y.ℳ
         error("X and Y are not in the same tangent space")
     end
-    return TangentVector(X.v+Y.v, x, ℳ)
+    return TangentVector(X.x, X.v+Y.v, X.ℳ)
 end
 
 function Base.:-(X::TangentVector{T,TM}, Y::TangentVector{T,TM}) where {T,TM}
     if X.x != Y.x || X.ℳ != Y.ℳ
         error("X and Y are not in the same tangent space")
     end
-    return TangentVector(X.v-Y.v, x, ℳ)
+    return TangentVector(X.x, X.v-Y.v, X.ℳ)
 end
+
+function Base.:*(X::TangentVector{T, TM}, α::Tα<:Real) where {T,TM}
+    return TangentVector(X.x, α.*X.v, X.ℳ)
+end
+Base.:*(α::Tα<:Real, X::TangentVector{T, TM}) where {T,TM} = X*α
 
 """
 Settings for an ellipse 𝔼 as subset of ℝ²

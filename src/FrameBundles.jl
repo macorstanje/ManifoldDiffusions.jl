@@ -5,8 +5,6 @@ struct FrameBundle{TM} <: EmbeddedManifold
     FrameBundle(ℳ::TM) where {TM<:EmbeddedManifold} = new{TM}(ℳ)
 end
 
-
-
 """
     Riemannian structure on the Frame bundle
 """
@@ -43,12 +41,12 @@ end
 
 function Geodesic(u₀::Frame, v₀::TangentFrame, tt, Fℳ::FrameBundle{TM}) where {TM}
     d = length(u₀.x)
-    if d>1
-        U₀ = vcat(u₀.x, vec(reshape(u₀.ν, d^2, 1)))
-        V₀ = vcat(v₀.ẋ, vec(reshape(v₀.ν̇, d^2, 1)))
-    else
+    if d==1
         U₀ = [u₀.x, u₀.ν]
         V₀ = [v₀.ẋ, v₀.ν̇]
+    else
+        U₀ = vcat(u₀.x, vec(reshape(u₀.ν, d^2, 1)))
+        V₀ = vcat(v₀.ẋ, vec(reshape(v₀.ν̇, d^2, 1)))
     end
     xx, pp = Integrate(Hamiltonian, tt, U₀, V₀, Fℳ)
     uu = map(x->Frame(x[1:d] , reshape(x[d+1:d+d^2], d, d)) , xx)
@@ -78,6 +76,7 @@ function IntegrateStep(dW, u::Frame, ℳ)
     uᴱ = ExponentialMap(u, sum([Hor(i, u,ℳ)*dW[i] for i in eachindex(dW)]), FrameBundle(ℳ))
     y = ExponentialMap(u, sum([(Hor(i,uᴱ,ℳ) + Hor(i, u,ℳ))*dW[i]*0.5 for i in eachindex(dW)]), FrameBundle(ℳ))
     return y
+    # return y
 end
 
 
