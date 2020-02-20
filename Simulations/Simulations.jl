@@ -8,8 +8,15 @@ include("../src/Manifolds.jl")
 
 # Visualization of the parallel vector field
 function line(q, p) # tangent vector p to a point q
+    if length(q) != length(p)
+        error("q and p have different sizes")
+    end
     t = collect(0:0.5:1)
-    [q[1].+p[1].*t  q[2].+p[2].*t]
+    out = zeros(length(p), length(p))
+    for i in 1:length(p)
+        out[i, :] = q[i].+p[i].*t
+    end
+    return out
 end
 
 # Stochastic Horizontal Development
@@ -65,9 +72,24 @@ W = sample(0:dt:T, Wiener{ℝ{2}}())
 U = StochasticDevelopment(W, u₀, 𝕊)
 X  = map(y -> F(Π(y), 𝕊), U.yy)
 
-plot(U.tt, [extractcomp(X,1), extractcomp(X,2), extractcomp(X,3)])
+νν = map(u->u.ν, U.yy)
+vv = map(n-> ForwardDiff.jacobian(x->F(x,𝕊), n), Π.(U.yy)).*νν
 
-SpherePlot(extractcomp(X,1), extractcomp(X,2), extractcomp(X,3), 𝕊)
+plot(U.tt, [extractcomp(X,1), extractcomp(X,2), extractcomp(X,3)])
+plotly()
+fig = SpherePlot(extractcomp(X,1), extractcomp(X,2), extractcomp(X,3), 𝕊)
+k=2
+for i in 0:200:length(tt)
+    global k
+    plot!(fig, line(X[i+1],vv[i+1][:, 1])[1,:], line(X[i+1],vv[i+1][:, 1])[2,:], line(X[i+1],vv[i+1][:, 1])[3,:],
+            label = "t = $(U.tt[i+1])", color = palette(:default)[k])
+    plot!(fig, line(X[i+1],vv[i+1][:, 2])[1,:], line(X[i+1],vv[i+1][:, 2])[2,:], line(X[i+1],vv[i+1][:, 2])[3,:],
+                    label = "t = $(U.tt[i+1])", color = palette(:default)[k])
+    k+=1
+end
+fig
+
+
 
 """
     On the Torus
