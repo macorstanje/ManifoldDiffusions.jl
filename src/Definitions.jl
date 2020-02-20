@@ -47,10 +47,10 @@ function Base.:-(X::TangentVector{T,TM}, Y::TangentVector{T,TM}) where {T,TM}
     return TangentVector(X.x, X.v-Y.v, X.ℳ)
 end
 
-function Base.:*(X::TangentVector{T, TM}, α::Tα<:Real) where {T,TM}
+function Base.:*(X::TangentVector{T, TM}, α::Tα) where {Tα<:Real,T,TM}
     return TangentVector(X.x, α.*X.v, X.ℳ)
 end
-Base.:*(α::Tα<:Real, X::TangentVector{T, TM}) where {T,TM} = X*α
+Base.:*(α::Tα, X::TangentVector{T, TM}) where {Tα<:Real,T,TM} = X*α
 
 """
 Settings for an ellipse 𝔼 as subset of ℝ²
