@@ -30,7 +30,7 @@ end
 function Hamiltonian(x::Tx, p::Tp, Fℳ::FrameBundle{TM}) where {Tx, Tp<:AbstractArray, TM}
     N = length(x)
     d = Int64((sqrt(1+4*N)-1)/2)
-    u = Frame(x[1:d] , reshape(x[d+1:d+d^2], d, d))
+    u = Frame(x[1:d] , reshape(x[d+1:d+d^2], d, d), Fℳ.ℳ)
     P = TangentFrame(u, p[1:d], reshape(p[d+1:d+d^2], d, d))
     return Hamiltonian(u, P, Fℳ)
 end
@@ -49,7 +49,7 @@ function Geodesic(u₀::Frame, v₀::TangentFrame, tt, Fℳ::FrameBundle{TM}) wh
         V₀ = vcat(v₀.ẋ, vec(reshape(v₀.ν̇, d^2, 1)))
     end
     xx, pp = Integrate(Hamiltonian, tt, U₀, V₀, Fℳ)
-    uu = map(x->Frame(x[1:d] , reshape(x[d+1:d+d^2], d, d)) , xx)
+    uu = map(x->Frame(x[1:d] , reshape(x[d+1:d+d^2], d, d), Fℳ.ℳ) , xx)
     vv = map(p->TangentFrame(u₀, p[1:d], reshape(p[d+1:d+d^2], d, d)), pp)
     return uu, vv
 end
@@ -76,7 +76,6 @@ function IntegrateStep(dW, u::Frame, ℳ)
     uᴱ = ExponentialMap(u, sum([Hor(i, u,ℳ)*dW[i] for i in eachindex(dW)]), FrameBundle(ℳ))
     y = ExponentialMap(u, sum([(Hor(i,uᴱ,ℳ) + Hor(i, u,ℳ))*dW[i]*0.5 for i in eachindex(dW)]), FrameBundle(ℳ))
     return y
-    # return y
 end
 
 

@@ -22,13 +22,13 @@ abstract type EmbeddedManifold <: Manifold end
     Elements of 𝑇ₓℳ and some operations
 """
 
-# a vector v ∈ 𝑇ₓℳ
+# a vector ẋ ∈ 𝑇ₓℳ
 struct TangentVector{T,TM}
     x::T
-    v::T
+    ẋ::T
     ℳ::TM
     function TangentVector(v::T, x::T, ℳ::TM) where {T<:AbstractArray, TM<:EmbeddedManifold}
-        new{T,TM}(x, v,ℳ)
+        new{T,TM}(x, v, ℳ)
     end
 end
 
@@ -188,6 +188,7 @@ function F(q::T, ℙ::Paraboloid) where {T<:AbstractArray}
     a, b, u, v = ℙ.a, ℙ.b, q[1], q[2]
     return [u, v, (u/a)^2+(v/b)^2]
 end
+
 """
     If a manifold is given as result of a function F:ℝᵈ → ℝᴺ, we obtain a
     Riemannian metric and Christoffel symbols for the Levi-Civita connection
@@ -201,13 +202,11 @@ function g(q::T, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedMani
         J = ForwardDiff.jacobian((p) -> F(p, ℳ), q)
     end
     return J'*J
-    # [4/(q[1]^2+q[2]^2+1)^2 0 ; 0 4/(q[1]^2+q[2]^2+1)^2]
 end
 
 # Returns the cometric
 function gˣ(q::T, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
     return inv(g(q, ℳ))
-    # [(q[1]^2+q[2]^2+1)^2/4 0 ; 0 (q[1]^2+q[2]^2+1)^2/4]
 end
 
 # Christoffel symbols Γ^i_{jk}

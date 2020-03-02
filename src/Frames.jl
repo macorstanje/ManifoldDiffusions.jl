@@ -3,14 +3,16 @@
     represents a basis for 𝑇ₓℳ
 """
 
-struct Frame{Tx, Tν}
+# A frame, represented by a matrix ν at an element x of a manifold ℳ
+struct Frame{Tx, Tν, TM}
     x::Tx
     ν::Tν
-    function Frame(x::Tx, ν::Tν) where {Tx, Tν <: Union{AbstractArray, Real}}
+    ℳ::TM
+    function Frame(x::Tx, ν::Tν, ℳ::TM) where {Tx, Tν <: Union{AbstractArray, Real}, TM<:EmbeddedManifold}
         # if rank(ν) != length(x)
         #     error("A is not of full rank")
         # end
-        new{Tx, Tν}(x, ν)
+        new{Tx, Tν, TM}(x, ν, ℳ)
     end
 end
 
@@ -29,14 +31,14 @@ end
 """
 
 # Theoretically, these do not exist, used for numerical calculations
-Base.:+(u::Frame{Tx, Tν}, v::Frame{Tx, Tν}) where {Tx, Tν} = Frame(u.x + v.x , u.ν .+ v.ν)
-Base.:-(u::Frame{Tx, Tν}, v::Frame{Tx, Tν}) where {Tx, Tν} = Frame(u.x - v.x , u.ν .- v.ν)
-Base.:-(u::Frame{Tx, Tν}) where {Tx, Tν} = Frame(-u.x , -u.ν)
-
-Base.:+(u::Frame{Tx, Tν}, y::Tx) where {Tx, Tν} = Frame(u.x + y, u.ν)
-Base.zero(u::Frame{Tx, Tν}) where {Tx, Tν} = Frame(zero(u.x), one(u.ν))
-
-Base.:*(u::Frame{Tx, Tν}, y::Tx) where {Tx,Tν} = Frame(y.*u.x, y.*u.ν)
+# Base.:+(u::Frame{Tx, Tν, TM}, v::Frame{Tx, Tν, TM}) where {Tx, Tν, TM} = Frame(u.x + v.x , u.ν .+ v.ν, )
+# Base.:-(u::Frame{Tx, Tν}, v::Frame{Tx, Tν}) where {Tx, Tν} = Frame(u.x - v.x , u.ν .- v.ν)
+# Base.:-(u::Frame{Tx, Tν}) where {Tx, Tν} = Frame(-u.x , -u.ν)
+#
+# Base.:+(u::Frame{Tx, Tν}, y::Tx) where {Tx, Tν} = Frame(u.x + y, u.ν)
+Base.zero(u::Frame{Tx, Tν}) where {Tx, Tν} = Frame(zero(u.x), one(u.ν), u.ℳ)
+#
+# Base.:*(u::Frame{Tx, Tν}, y::Tx) where {Tx,Tν} = Frame(y.*u.x, y.*u.ν)
 
 function Base.:+(X::TangentFrame{Tx, Tν}, Y::TangentFrame{Tx,Tν}) where {Tx,Tν}
     # if X.u != Y.u
@@ -53,11 +55,11 @@ function Base.:-(X::TangentFrame{Tx, Tν}, Y::TangentFrame{Tx,Tν}) where {Tx,T�
 end
 
 # this function should be the exponential map on F(ℳ)
-function Base.:+(u::Frame{Tx, Tν}, X::TangentFrame{Tx, Tν}) where {Tx,Tν}
+function Base.:+(u::Frame{Tx, Tν, TM}, X::TangentFrame{Tx, Tν}) where {Tx,Tν, TM}
     # if X.u != u
     #     error("X is not tangent to u")
     # end
-    return Frame(u.x + X.ẋ , u.ν + X.ν̇)
+    return Frame(u.x + X.ẋ , u.ν + X.ν̇, u.ℳ)
 end
 
 function Base.:*(X::TangentFrame{Tx, Tν}, y::Float64) where {Tx, Tν}
@@ -69,13 +71,13 @@ function Base.:*(y::Float64, X::TangentFrame{Tx, Tν}) where {Tx, Tν}
 end
 
 # Canonical projection
-Π(u::Frame{Tx, Tν}) where {Tx,Tν} = u.x
+Π(u::Frame{Tx, Tν, TM}) where {Tx,Tν, TM} = u.x
 
 # Pushforward map of the canonocal projection
 Πˣ(X::TangentFrame{Tx, Tν}) where {Tx, Tν} = X.ẋ
 
 # The group action of a frame on ℝᵈ
-FrameAction(u::Frame{Tx, Tν}, e::T) where {Tx,Tν,T<:Union{AbstractArray, Real}} = u.ν*e
+FrameAction(u::Frame{Tx, Tν, TM}, e::T) where {Tx,Tν,T<:Union{AbstractArray, Real}, TM} = TangentVector(u.x, u.ν*e, u.ℳ)
 
 # Horizontal lift of the orthogonal projection
 Pˣ(u::Frame, ℳ::T) where {T<:EmbeddedManifold} = TangentFrame(u, u.x, P(u.x, ℳ))
@@ -83,6 +85,7 @@ Pˣ(u::Frame, ℳ::T) where {T<:EmbeddedManifold} = TangentFrame(u, u.x, P(u.x, 
 """
     Horizontal vector fields
 """
+
 # Horizontal vector (a tangent frame) corresponding to the i'th unit vector
 function Hor(i::Int64, u::Frame, ℳ::TM) where {TM<:EmbeddedManifold}
     x, ν = u.x, u.ν

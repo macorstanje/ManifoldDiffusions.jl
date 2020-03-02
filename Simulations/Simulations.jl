@@ -62,7 +62,7 @@ fig
 𝕊 = Sphere(1.0)
 
 x₀ = [0.,0]
-u₀ = Frame(x₀, [1/sqrt(2) 1/sqrt(2); 1/sqrt(2) -1/sqrt(2)])
+u₀ = Frame(x₀, [1. 0. ; 0.  1.])
 
 T = 1.0
 dt = 1/1000
@@ -75,7 +75,7 @@ X  = map(y -> F(Π(y), 𝕊), U.yy)
 νν = map(u->u.ν, U.yy)
 vv = map(n-> ForwardDiff.jacobian(x->F(x,𝕊), n), Π.(U.yy)).*νν
 
-plot(U.tt, [extractcomp(X,1), extractcomp(X,2), extractcomp(X,3)])
+# plot(U.tt, [extractcomp(X,1), extractcomp(X,2), extractcomp(X,3)])
 plotly()
 fig = SpherePlot(extractcomp(X,1), extractcomp(X,2), extractcomp(X,3), 𝕊)
 k=2
@@ -97,7 +97,7 @@ fig
 
 𝕋 = Torus(4.0,1.0)
 x₀ = [0.,0]
-u₀ = Frame(x₀, [1. 0.; 0. 1.])
+u₀ = Frame(x₀, [0. 1.; 1. 0.])
 
 T = 1.0
 dt = 1/1000
@@ -107,10 +107,22 @@ W = sample(0:dt:T, Wiener{ℝ{2}}())
 U = StochasticDevelopment(W, u₀, 𝕋)
 X  = map(y -> F(Π(y), 𝕋), U.yy)
 
+νν = map(u->u.ν, U.yy)
+vv = map(n-> ForwardDiff.jacobian(x->F(x,𝕋), n), Π.(U.yy)).*νν
+
 plot(U.tt, [extractcomp(X,1), extractcomp(X,2), extractcomp(X,3)])
 
-include("Torusplots.jl"); plotly()
-TorusPlot(extractcomp(X,1), extractcomp(X,2), extractcomp(X,3), 𝕋)
+fig = TorusPlot(extractcomp(X,1), extractcomp(X,2), extractcomp(X,3), 𝕋)
+k=2
+for i in 0:200:length(tt)
+    global k
+    plot!(fig, line(X[i+1],vv[i+1][:, 1])[1,:], line(X[i+1],vv[i+1][:, 1])[2,:], line(X[i+1],vv[i+1][:, 1])[3,:],
+            label = "t = $(U.tt[i+1])", color = palette(:default)[k])
+    plot!(fig, line(X[i+1],vv[i+1][:, 2])[1,:], line(X[i+1],vv[i+1][:, 2])[2,:], line(X[i+1],vv[i+1][:, 2])[3,:],
+                    label = "t = $(U.tt[i+1])", color = palette(:default)[k])
+    k+=1
+end
+fig
 
 """
     On the paraboloid
