@@ -27,18 +27,12 @@ struct TangentFrame{Tx,Tν}
 end
 
 """
-    Some generic functions for calculations on F(ℳ)
+    Some generic functions for calculations on TF(ℳ)
 """
 
-# Theoretically, these do not exist, used for numerical calculations
-# Base.:+(u::Frame{Tx, Tν, TM}, v::Frame{Tx, Tν, TM}) where {Tx, Tν, TM} = Frame(u.x + v.x , u.ν .+ v.ν, )
-# Base.:-(u::Frame{Tx, Tν}, v::Frame{Tx, Tν}) where {Tx, Tν} = Frame(u.x - v.x , u.ν .- v.ν)
-# Base.:-(u::Frame{Tx, Tν}) where {Tx, Tν} = Frame(-u.x , -u.ν)
-#
-# Base.:+(u::Frame{Tx, Tν}, y::Tx) where {Tx, Tν} = Frame(u.x + y, u.ν)
 Base.zero(u::Frame{Tx, Tν}) where {Tx, Tν} = Frame(zero(u.x), one(u.ν), u.ℳ)
-#
-# Base.:*(u::Frame{Tx, Tν}, y::Tx) where {Tx,Tν} = Frame(y.*u.x, y.*u.ν)
+
+# Vector space operations on 𝑇ᵤF(ℳ)
 
 function Base.:+(X::TangentFrame{Tx, Tν}, Y::TangentFrame{Tx,Tν}) where {Tx,Tν}
     # if X.u != Y.u
@@ -70,10 +64,11 @@ function Base.:*(y::Float64, X::TangentFrame{Tx, Tν}) where {Tx, Tν}
     TangentFrame(X.u , X.ẋ.*y , X.ν̇.*y)
 end
 
-# Canonical projection
+
+# Canonical projection Π: F(ℳ) → ℳ
 Π(u::Frame{Tx, Tν, TM}) where {Tx,Tν, TM} = u.x
 
-# Pushforward map of the canonocal projection
+# Pushforward map of the canonocal projection Πˣ: TF(ℳ) → Tℳ
 Πˣ(X::TangentFrame{Tx, Tν}) where {Tx, Tν} = X.ẋ
 
 # The group action of a frame on ℝᵈ

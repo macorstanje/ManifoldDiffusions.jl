@@ -62,7 +62,7 @@ fig
 𝕊 = Sphere(1.0)
 
 x₀ = [0.,0]
-u₀ = Frame(x₀, [1. 0. ; 0.  1.])
+u₀ = Frame(x₀, [1. 0. ; 0.  1.], 𝕊)
 
 T = 1.0
 dt = 1/1000
@@ -141,3 +141,10 @@ plot(U.tt, [extractcomp(X,1), extractcomp(X,2), extractcomp(X,3)])
 
 include("ParaboloidPlots.jl")
 ParaboloidPlot(extractcomp(X,1), extractcomp(X,2), extractcomp(X,3), ℙ)
+
+P = [0. .5 .5 ; .5 0. .5 ; .5 .5 0. ]
+
+using LinearAlgebra
+
+inv(eigvecs(P))*diagm(eigvals(P))*eigvecs(P)
+eigvecs(P)

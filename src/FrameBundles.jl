@@ -60,7 +60,7 @@ function ExponentialMap(u₀::Frame, v₀::TangentFrame, Fℳ::FrameBundle{TM}) 
     if length(u₀.x)>1
         return uu[end]
     else
-        return Frame(uu[end].x[1], uu[end].ν[1])
+        return Frame(uu[end].x[1], uu[end].ν[1], Fℳ.ℳ)
     end
 end
 
@@ -80,8 +80,9 @@ end
 
 
 using Bridge
-StochasticDevelopment(W, u₀, ℳ) = let X = Bridge.samplepath(W.tt, zero(u₀)); StochasticDevelopment!(X, W, u₀,ℳ); X end
-function StochasticDevelopment!(Y, W, u₀, ℳ)
+
+
+function StochasticDevelopment!(Y, W, u₀, ℳ, drift)
     tt = W.tt
     ww = W.yy
     yy = Y.yy
@@ -91,9 +92,17 @@ function StochasticDevelopment!(Y, W, u₀, ℳ)
         dw = ww[k+1] - ww[k]
         yy[..,k] = y
         y = IntegrateStep(dw, y, ℳ)
+        if drift
+            dt = tt[k+1] - tt[k]
+            y += V(tt[k], y, ℳ)*dt
+        end
     end
     yy[..,length(tt)] = y
     Y
+end
+
+function StochasticDevelopment(W, u₀, ℳ, drift)
+    let X = Bridge.samplepath(W.tt, zero(u₀)); StochasticDevelopment!(X, W, u₀,ℳ, drift); X end
 end
 
 """
