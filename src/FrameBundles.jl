@@ -73,8 +73,10 @@ end
 
 function IntegrateStep(dW, u::Frame, ℳ)
     x, ν = u.x, u.ν
-    uᴱ = ExponentialMap(u, sum([Hor(i, u,ℳ)*dW[i] for i in eachindex(dW)]), FrameBundle(ℳ))
-    y = ExponentialMap(u, sum([(Hor(i,uᴱ,ℳ) + Hor(i, u,ℳ))*dW[i]*0.5 for i in eachindex(dW)]), FrameBundle(ℳ))
+    # uᴱ = ExponentialMap(u, sum([Hor(i, u,ℳ)*dW[i] for i in eachindex(dW)]), FrameBundle(ℳ))
+    # y = ExponentialMap(u, sum([(Hor(i,uᴱ,ℳ) + Hor(i, u,ℳ))*dW[i]*0.5 for i in eachindex(dW)]), FrameBundle(ℳ))
+    uᴱ = u + sum([Hor(i, u,ℳ)*dW[i] for i in eachindex(dW)])
+    y = u + sum([(Hor(i,uᴱ,ℳ) + Hor(i, u,ℳ))*dW[i]*0.5 for i in eachindex(dW)])
     return y
 end
 
@@ -82,7 +84,7 @@ end
 using Bridge
 
 
-function StochasticDevelopment!(Y, W, u₀, ℳ, drift)
+function StochasticDevelopment!(Y, W, u₀, ℳ; drift)
     tt = W.tt
     ww = W.yy
     yy = Y.yy
@@ -101,8 +103,8 @@ function StochasticDevelopment!(Y, W, u₀, ℳ, drift)
     Y
 end
 
-function StochasticDevelopment(W, u₀, ℳ, drift)
-    let X = Bridge.samplepath(W.tt, zero(u₀)); StochasticDevelopment!(X, W, u₀,ℳ, drift); X end
+function StochasticDevelopment(W, u₀, ℳ; drift)
+    let X = Bridge.samplepath(W.tt, zero(u₀)); StochasticDevelopment!(X, W, u₀,ℳ; drift = drift); X end
 end
 
 """

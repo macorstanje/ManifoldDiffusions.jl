@@ -161,7 +161,7 @@ function TorusPlot(X::T, Y::T, Z::T, 𝕋::Torus) where {T<:AbstractArray}
                     color = :grey, #fill(RGBA(1.,1.,1.,0.8),lenu,lenv),
                     xlim = (-rng-1, rng+1),
                     ylim = (-rng-1, rng+1),
-                    zlim = (-rng-1, rng+1)
+                    zlim = (-𝕋.r-1, 𝕋.r+1)
                     )
     Plots.plot!(X,Y,Z,
                     axis = true,
@@ -171,6 +171,10 @@ function TorusPlot(X::T, Y::T, Z::T, 𝕋::Torus) where {T<:AbstractArray}
                     xlabel = "x",
                     ylabel = "y",
                     zlabel = "z")
+end
+
+function TorusPlot!(fig, X::T, Y::T, Z::T, 𝕋::Torus) where {T<:AbstractArray}
+    Plots.plot!(fig, X, Y, Z)
 end
 
 # Plot a SamplePath
