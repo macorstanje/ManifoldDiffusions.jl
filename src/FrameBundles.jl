@@ -106,7 +106,3 @@ end
 function StochasticDevelopment(W, u₀, ℳ; drift)
     let X = Bridge.samplepath(W.tt, zero(u₀)); StochasticDevelopment!(X, W, u₀,ℳ; drift = drift); X end
 end
-
-"""
-    Now let us create a stochastic process on the frame bundle of various manifolds
-"""
