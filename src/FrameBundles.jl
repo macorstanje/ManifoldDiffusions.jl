@@ -96,7 +96,7 @@ function StochasticDevelopment!(Y, W, u₀, ℳ; drift)
         y = IntegrateStep(dw, y, ℳ)
         if drift
             dt = tt[k+1] - tt[k]
-            y += V(tt[k], y, ℳ)*dt
+            y += Vᵒ(tt[k], y, ℳ)*dt
         end
     end
     yy[..,length(tt)] = y
