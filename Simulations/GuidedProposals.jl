@@ -71,7 +71,7 @@ function llikelihood!(U::SamplePath, W::SamplePath, 𝕋)
         u = IntegrateStep(dw, u, 𝕋) + vᵒ*ds
 
         # Extra likelihood term
-        som -= dot(V(u.x, 𝕋), ∇logh)*ds
+        som += dot(V(u.x, 𝕋), ∇logh)*ds
     end
     uu[.., length(tt)] = u
     som
@@ -85,15 +85,13 @@ end
 
 using ProgressMeter
 
-function MCMC()
+function MCMC(iterations)
     W = sample(0:dt:T, Wiener{ℝ{2}}())
     U = StochasticDevelopment(W, u₀, 𝕋; drift = false)
     Uᵒ = deepcopy(U)
     ll = llikelihood!(Uᵒ, W, 𝕋)
 
     Xᵒ  = map(y -> F(Π(y), 𝕋), Uᵒ.yy)
-
-    iterations = 20
 
     UUᵒ = [Uᵒ]
     XXᵒ = [Xᵒ]
@@ -123,13 +121,14 @@ function MCMC()
 end
 
 
-UUᵒ, XXᵒ, ll, acc = MCMC()
-
+UUᵒ, XXᵒ, ll, acc = MCMC(50)
 
 
 plotly()
-fig = TorusPlot(extractcomp(X,1), extractcomp(X,2), extractcomp(X,3), 𝕋)
-TorusPlot!(fig, extractcomp(Xᵒ,1), extractcomp(Xᵒ,2), extractcomp(Xᵒ,3), 𝕋)
+fig = TorusPlot(extractcomp(XXᵒ[1],1), extractcomp(XXᵒ[1],2), extractcomp(XXᵒ[1],3), 𝕋)
+for i in max(acc-5, 0):acc
+    TorusPlot!(fig, extractcomp(XXᵒ[i],1), extractcomp(XXᵒ[i],2), extractcomp(XXᵒ[i],3), 𝕋)
+end
 Plots.plot!([F(u₀.x, 𝕋)[1]], [F(u₀.x, 𝕋)[2]], [F(u₀.x, 𝕋)[3]],
             seriestype = :scatter,
             color= :red,
