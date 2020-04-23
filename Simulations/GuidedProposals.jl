@@ -30,7 +30,7 @@ function ĥ(t, y, K, 𝕋)
 end
 
 # Setting a vector field on the Torus
-V(y, 𝕋) = [-y[2] , y[1]]
+V(y, 𝕋) = [y[1]+π, y[2]+π]
 
 # Lift of V
 V⁺(u, 𝕋) = TangentFrame(u, V(Π(u), 𝕋) , u.ν)
@@ -49,8 +49,6 @@ We have
     dℙ⁺/dℙ⁰(Uᵒ) ∝ exp{-∫₀ᵗ V⁺ĥ(s, U_s)/ĥ(s, U_s) ds }
 
 """
-
-# function that writes a guided proposal on U and returns the log-likelihood
 function llikelihood!(U::SamplePath, W::SamplePath, 𝕋)
     tt = U.tt
     uu = U.yy

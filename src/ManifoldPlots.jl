@@ -165,7 +165,7 @@ function TorusPlot(X::T, Y::T, Z::T, 𝕋::Torus) where {T<:AbstractArray}
                     )
     Plots.plot!(X,Y,Z,
                     axis = true,
-                    linewidth = 1.5,
+                    linewidth = 2.5,
                     color = palette(:default)[1],
                     legend = false,
                     xlabel = "x",
@@ -174,7 +174,7 @@ function TorusPlot(X::T, Y::T, Z::T, 𝕋::Torus) where {T<:AbstractArray}
 end
 
 function TorusPlot!(fig, X::T, Y::T, Z::T, 𝕋::Torus) where {T<:AbstractArray}
-    Plots.plot!(fig, X, Y, Z)
+    Plots.plot!(fig, X, Y, Z, linewidth = 2.5)
 end
 
 # Plot a SamplePath
