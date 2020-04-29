@@ -1,4 +1,5 @@
 include("../src/Manifolds.jl")
+using ProgressMeter
 
 """
     On the circle 𝕊, the transition density of Brownian motion is given by
@@ -23,14 +24,19 @@ end
 T = 1.0
 dt = 0.001
 u₀ = Frame([π/2, 0] , [1. 0. ; 0.  1/3] , 𝕋)
-v = [3π/2, π/2]
+v = [3π/2, π]
+
+h₀ = HeatKernel(0, Π(u₀), T, v, 100, 𝕋)
 
 function ĥ(t, y, K, 𝕋)
-    HeatKernel(t, y, T, v, K, 𝕋)/HeatKernel(0, Π(u₀), T, v, K, 𝕋)
+    HeatKernel(t, y, T, v, K, 𝕋)/h₀
 end
 
 # Setting a vector field on the Torus
-V(y, 𝕋) = [y[1]+π, y[2]+π]
+V(y, 𝕋) = [0. , π/2 ]
+[3π/2, π/2]
+# Three dimensional representation of V
+ForwardDiff.jacobian(x->F(x,𝕋), u₀.x)*V(u₀.x, 𝕋)
 
 # Lift of V
 V⁺(u, 𝕋) = TangentFrame(u, V(Π(u), 𝕋) , u.ν)
@@ -81,8 +87,6 @@ end
     Take MCMC steps to update the driving BMs
 """
 
-using ProgressMeter
-
 function MCMC(iterations)
     W = sample(0:dt:T, Wiener{ℝ{2}}())
     U = StochasticDevelopment(W, u₀, 𝕋; drift = false)
@@ -119,12 +123,12 @@ function MCMC(iterations)
 end
 
 
-UUᵒ, XXᵒ, ll, acc = MCMC(50)
+UUᵒ, XXᵒ, ll, acc = MCMC(80)
 
 
 plotly()
 fig = TorusPlot(extractcomp(XXᵒ[1],1), extractcomp(XXᵒ[1],2), extractcomp(XXᵒ[1],3), 𝕋)
-for i in max(acc-5, 0):acc
+for i in max(acc-10, 0):acc-5
     TorusPlot!(fig, extractcomp(XXᵒ[i],1), extractcomp(XXᵒ[i],2), extractcomp(XXᵒ[i],3), 𝕋)
 end
 Plots.plot!([F(u₀.x, 𝕋)[1]], [F(u₀.x, 𝕋)[2]], [F(u₀.x, 𝕋)[3]],
