@@ -1,9 +1,13 @@
+"""
+    Manifold
 
+Abstract (super-)type under which all speficic manifolds fall
+"""
 abstract type Manifold end
-abstract type SDEForm end
 
-struct Ito <: SDEForm end
-struct Stratonovich <: SDEForm end
+# abstract type SDEForm end
+# struct Ito <: SDEForm end
+# struct Stratonovich <: SDEForm end
 
 const ℝ{N} = SVector{N, Float64}
 const IndexedTime = Tuple{Int64,Float64}
@@ -12,17 +16,23 @@ outer(x,y) = x*y'
 extractcomp(v, i) = map(x->x[i], v)
 
 """
-    EmbeddedManifold creates a manifold ``M = f^{-1}({0})`` of dimension d=N-n
-    where ``f`` should be a smooth function ``ℝ^N → ℝ^n``
-"""
+    EmbeddedManifold <: Manifold
 
+EmbeddedManifold creates a manifold `ℳ = f^{-1}({0})` of dimension d=N-n
+where ``f`` should be a smooth function ``ℝ^N → ℝ^n``. An EmbeddedManifold ℳ
+equipped with functions `f( , ℳ)`, `P( , ℳ)` and `F( , ℳ)`.
+Here `f` is such that `f(q, ℳ)=0` when ``q∈ℳ``, `P(q, ℳ)` is the projection
+matrix ``ℝ^N→T_qℳ`` given by ``I-n(q)n(q)^T``, where ``n(q)=∇f(q)/|∇f(q)|``.
+`F(q, ℳ)` is the transformation from local coordinates `q` to global coordinates
+in ``ℝ^N``.
+"""
 abstract type EmbeddedManifold <: Manifold end
 
 """
-    Elements of 𝑇ₓℳ and some operations
-"""
+    TangentVector{T, TM}
 
-# a vector ẋ ∈ 𝑇ₓℳ
+Elements of 𝑇ₓℳ and some vector-space operations.
+"""
 struct TangentVector{T,TM}
     x::T
     ẋ::T
@@ -52,10 +62,21 @@ function Base.:*(X::TangentVector{T, TM}, α::Tα) where {Tα<:Real,T,TM}
 end
 Base.:*(α::Tα, X::TangentVector{T, TM}) where {Tα<:Real,T,TM} = X*α
 
-"""
-Settings for an ellipse 𝔼 as subset of ℝ²
-"""
 
+"""
+    Ellipse{T<:Real} <: EmbeddedManifold
+
+Settings for an ellipse as subset of ℝ². Elements satisfy ``(x/a)^2 + (y/b)^2 = 1``.
+For an object `𝔼 = Ellipse(a, b)`, we have
+
+- `` f(q, \\mathcal{𝔼}) = \\left(\\frac{q_1}{a}\\right)^2 + \\left(\\frac{q_2}{b}\\right)^2 - 1 ``
+- `` F(q, 𝔼) = \\begin{pmatrix} a\\cos q & b \\sin q\\end{pmatrix}``
+
+# Example: Generate a unit circle
+```julia-repl
+julia> 𝔼 = Ellipse(1.0, 1.0)
+```
+"""
 struct Ellipse{T<:Real} <: EmbeddedManifold
     a::T
     b::T
@@ -83,15 +104,23 @@ function F(θ::T, 𝔼::Ellipse) where {T<:Real}
     [𝔼.a*cos.(θ) , 𝔼.b*sin.(θ)]
 end
 
-"""
-    We introduce some manifolds embedded in ℝ³, given by f⁻¹({0}) and
-    parameterized by ℝ² ⊇ (u,v) ↦ F(u,v) ⊆ ℝ³
-"""
 
 """
-    Settings for the sphere 𝕊²
-"""
+    Sphere{T<:Real} <: EmbeddedManifold
 
+Settings for the sphere 𝕊². Call `Sphere(R)` to generate a sphere with radius
+`R<:Real`. Elements satisfy ``x^2+y^2+z^2=R^2``. The local coordinates are modelled
+via a stereograpgical projection.
+
+For a Sphere `𝕊 = Sphere(R)`, we have
+
+- ``f(q, 𝕊) = q_1^2+q_2^2-R^2``
+- ``F(q, 𝕊) = \\begin{pmatrix} \\frac{2q_1}{q_1^2+q_2^2+1} & \\frac{2q_2}{q_1^2+q_2^2+1} & \\frac{q_1^2+q_2^2-1}{q_1^2+q_2^2+1} \\end{pmatrix}``
+# Example: Generate a unit sphere
+```julia-repl
+julia> 𝕊 = Sphere(1.0)
+```
+"""
 struct Sphere{T<:Real} <: EmbeddedManifold
     R::T
 
@@ -120,9 +149,21 @@ function F(q::T, 𝕊::Sphere) where {T<:AbstractArray}
 end
 
 """
-    Settings for the Torus 𝕋².
-"""
+    Torus{T<:Real} <: EmbeddedManifold
 
+Settings for the torus 𝕋² with inner radius ``r`` and outer radius ``R``. Call
+`Torus(R,r)` to generate a torus with inner radius `r<:Real` and outer radius `R<:Real`.
+Elements satisfy ``(x^2+y^2+z^2+R^2-r^2)^2=4R^2(x^2+y^2)``.
+
+For a Torus `𝕋 = Torus(R, r)`, we have
+
+- ``f(q, 𝕋) =
+
+# Example: Generate a torus with ``R=3`` and ``r=1``
+```julia-repl
+julia> 𝕋 = Torus(3.0, 1.0)
+```
+"""
 struct Torus{T<:Real} <: EmbeddedManifold
     R::T
     r::T
@@ -157,9 +198,17 @@ end
 
 
 """
-    Settings for the Paraboloid ℙ²
-"""
+    Paraboloid{T<:Real} <: EmbeddedManifold
 
+Settings for the Paraboloid. Call `Paraboloid(a,b)` to generate a paraboloid
+with parameters `a<:Real` and outer radius `b<:Real`.
+Elements satisfy ``(x/a)^2+(y/b)^2 = z``.
+
+# Example: Generate a torus with ``a=0`` and ``b=1``
+```julia-repl
+julia> ℙ = Parabolod(3.0, 1.0)
+```
+"""
 struct Paraboloid{T<:Real} <: EmbeddedManifold
     a::T
     b::T
@@ -190,11 +239,12 @@ function F(q::T, ℙ::Paraboloid) where {T<:AbstractArray}
 end
 
 """
-    If a manifold is given as result of a function F:ℝᵈ → ℝᴺ, we obtain a
-    Riemannian metric and Christoffel symbols for the Levi-Civita connection
-"""
+    g(q::T, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
 
-# Riemannian metric in terms of a parameterization F
+If `ℳ<:EmbeddedManifold` is given in local coordinates ``F:ℝ^d → ℝ^N``, we obtain a
+Riemannian metric. `g(q, ℳ)` returns the matrix ``J^TJ``, where ``J`` denotes
+the Jacobian matrix for ``F`` in `q<:Union{AbstractArray, Real}`.
+"""
 function g(q::T, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
     if length(q) == 1
         J = ForwardDiff.derivative((p) -> F(p, ℳ), q)
@@ -209,7 +259,16 @@ function gˣ(q::T, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedMa
     return inv(g(q, ℳ))
 end
 
-# Christoffel symbols Γ^i_{jk}
+
+"""
+    Γ(q::T, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
+
+If `ℳ<:EmbeddedManifold` is given in local coordinates ``F:ℝ^d → ℝ^N``, we obtain
+Christoffel symbols ``Γ^i_{jk}`` for the Levi-Civita connection
+
+In local coordinates `q`, `Γ(q, ℳ)` returns a matrix of size ``d×d×d`` where the
+element `[i,j,k]` corresponds to ``Γ^i_{jk}``.
+"""
 function Γ(q::T, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
     d = length(q)
     if d == 1
@@ -224,8 +283,11 @@ function Γ(q::T, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedMan
     end
 end
 
+"""
+    Hamiltonian(x::Tx, p::Tp, ℳ::TM) where {Tx, Tp <: Union{AbstractArray, Real}, TM <: EmbeddedManifold}
 
-# Hamiltonian
+Returns the Hamiltonian induced by the Riemannian metric for a tangent vector `p` to `ℳ` at `x`
+"""
 function Hamiltonian(x::Tx, p::Tp, ℳ::TM) where {Tx, Tp <: Union{AbstractArray, Real}, TM <: EmbeddedManifold}
     .5*p'*gˣ(x, ℳ)*p
  end

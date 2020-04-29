@@ -80,10 +80,6 @@ function IntegrateStep(dW, u::Frame, ℳ)
     return y
 end
 
-
-using Bridge
-
-
 function StochasticDevelopment!(Y, W, u₀, ℳ; drift)
     tt = W.tt
     ww = W.yy

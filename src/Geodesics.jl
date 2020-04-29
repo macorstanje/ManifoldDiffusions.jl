@@ -26,11 +26,23 @@ function Integrate(H, tt, x₀::Tx, p₀::Tp, ℳ::TM) where {Tx, Tp <:AbstractA
     return xx,pp
 end
 
+"""
+    Geodesic(x₀::Tx, v₀::Tv, tt, ℳ::TM) where {Tx, Tv <: AbstractArray, TM<:EmbeddedManifold}
+
+Returns the values of the geodesic on `ℳ` starting at `x₀` with initial velicity
+v₀ on a discretized time interval `tt`. All input is in local coordinates.
+"""
 function Geodesic(x₀::Tx, v₀::Tv, tt, ℳ::TM) where {Tx, Tv <: AbstractArray, TM<:EmbeddedManifold}
     xx, vv = Integrate(Hamiltonian, tt, x₀, v₀, ℳ)
     return xx, vv
 end
 
+"""
+    ExponentialMap(x₀::Tx, v₀::Tv, ℳ::TM) where {Tx, Tv <: AbstractArray, TM<:EmbeddedManifold}
+
+Returns as new element of `ℳ` that results from ``Exp_{x_0}v_0``, where the
+point `x₀` on `ℳ` and initial velocity `v₀` are given in local coordinates.
+"""
 function ExponentialMap(x₀::Tx, v₀::Tv, ℳ::TM) where {Tx, Tv <: AbstractArray, TM<:EmbeddedManifold}
     tt = collect(0:0.01:1)
     xx, vv = Geodesic(x₀, v₀, tt, ℳ)
@@ -39,11 +51,11 @@ end
 
 
 """
-    Parallel transport along a curve γ:
-        v̇^i(t) + Γ^i_{jk}(γ(t))v^j γ̇^k = 0 for all i
-"""
+    ParallelTransport(γ, γ̇, V₀, tt, ℳ)
 
-# returns Vt, the parallel transport of initial vector V₀, where γ and γ̇ are known on tt
+returns the parallel transport of an initial  vector V₀, tangent to ℳ at ``γ(0)``,
+along a curve `γ`. It is assumed γ and γ̇ are known on a discretized time interval `tt`
+"""
 function ParallelTransport(γ, γ̇, V₀, tt, ℳ)
     N = length(tt)
     V = V₀
