@@ -241,9 +241,9 @@ end
 """
     g(q::T, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
 
-If `ℳ<:EmbeddedManifold` is given in local coordinates ``F:ℝ^d → ℝ^N``, we obtain a
-Riemannian metric. `g(q, ℳ)` returns the matrix ``J^TJ``, where ``J`` denotes
-the Jacobian matrix for ``F`` in `q<:Union{AbstractArray, Real}`.
+If `ℳ<:EmbeddedManifold` is given in local coordinates ``F:ℝ^d → ℝ^N``, we obtain
+a Riemannian metric. `g(q, ℳ)` returns the matrix ``\\mathrm{d}F^T\\mathrm{d}F``,
+where ``\\mathrm{d}F`` denotes the Jacobian matrix for ``F`` in `q<:Union{AbstractArray, Real}`.
 """
 function g(q::T, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
     if length(q) == 1
