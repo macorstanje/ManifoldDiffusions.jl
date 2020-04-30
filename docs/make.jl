@@ -6,9 +6,14 @@ using .Manifolds
 makedocs(
     modules = [Manifolds],
     sitename = "Manifolds.jl",
-    authors = "Marc Corstanje and contributors"
+    authors = "Marc Corstanje and contributors",
+    pages = Any[
+        "Home" => "index.md",
+        "Manual" => "manual.md",
+        "Library" => "library.md",
+    ],
 )
 
 deploydocs(
-    repo = "https://github.com/macorstanje/Manifolds.jl.git"
+    repo = "github.com/macorstanje/Manifolds.jl.git"
 )
