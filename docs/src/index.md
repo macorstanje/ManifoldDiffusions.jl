@@ -1,29 +1,3 @@
-# Various manifolds and basic functions
+# Documentation for Manifolds.jl
 
-```@docs
-Manifold
-EmbeddedManifold
-TangentVector
-Ellipse
-Sphere
-Torus
-Paraboloid
-g
-Γ
-```
-
-# Geodesics
-```@docs
-Geodesic
-ExponentialMap
-ParallelTransport
-```
-
-# Frames and the Frame bundle
-```@docs
-Frame
-TangentFrame
-Π
-Πˣ
-Hor
-```
+Homepage
