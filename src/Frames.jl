@@ -1,9 +1,20 @@
 """
-    Elements of F(ℳ) consist of a position x and a GL(d, ℝ)-matrix ν that
-    represents a basis for 𝑇ₓℳ
-"""
+    Frame{Tx, Tν, TM}
 
-# A frame, represented by a matrix ν at an element x of a manifold ℳ
+Elements of ``\\mathrm{F}(ℳ)`` consist of a position `x::Tx` on `ℳ<:EmbeddedManifold` and a
+``\\mathrm{GL}(d, ℝ)``-matrix `ν::Tν` that consists of column vectors that form
+a basis for T_xℳ. All input is assumed to be in local coordinates that coincide
+with `F( ,ℳ)`.
+
+# Example: A frame on the south pole on the sphere
+
+```julia-repl
+julia> 𝕊 = Sphere(1.0)
+julia> u = Frame([0. , 0.], [1. 0. ; 0.  1.], 𝕊)
+julia> u.x # returns [0. , 0.]
+julia> u.ν # returns [1. 0. ; 0. 1.]
+```
+"""
 struct Frame{Tx, Tν, TM}
     x::Tx
     ν::Tν
@@ -16,7 +27,19 @@ struct Frame{Tx, Tν, TM}
     end
 end
 
-# A tangent vector (ẋ, ν̇) ∈ 𝑇ᵤF(ℳ)
+"""
+    TangentFrame{Tx, Tν}
+
+A tangent vector ``(ẋ, ν̇) ∈ T_u\\mathrm{F}(ℳ)``. This object consists of the frame
+`u::Frame` that it is tangent to and the velocities `ẋ` and `ν̇`.
+
+# Example:
+```julia-repl
+julia> 𝕊 = Sphere(1.0)
+julia> u = Frame([0. , 0.], [1. 0. ; 0.  1.], 𝕊)
+julia> V = TangentFrame(u, [1. 0.] , [-0.1 0. ; -0.5 1.])
+```
+"""
 struct TangentFrame{Tx,Tν}
     u::Frame
     ẋ::Tx
@@ -25,10 +48,6 @@ struct TangentFrame{Tx,Tν}
         new{Tx,Tν}(u, ẋ, ν̇)
     end
 end
-
-"""
-    Some generic functions for calculations on TF(ℳ)
-"""
 
 Base.zero(u::Frame{Tx, Tν}) where {Tx, Tν} = Frame(zero(u.x), one(u.ν), u.ℳ)
 
@@ -64,11 +83,19 @@ function Base.:*(y::Float64, X::TangentFrame{Tx, Tν}) where {Tx, Tν}
     TangentFrame(X.u , X.ẋ.*y , X.ν̇.*y)
 end
 
+"""
+    Π(u::Frame)
 
-# Canonical projection Π: F(ℳ) → ℳ
+Canonical projection ``Π: \\mathrm{F}(ℳ) → ℳ`` that maps ``(x,ν)`` to ``x``.
+"""
 Π(u::Frame{Tx, Tν, TM}) where {Tx,Tν, TM} = u.x
 
-# Pushforward map of the canonocal projection Πˣ: TF(ℳ) → Tℳ
+"""
+    Πˣ(X::TangentFrame)
+
+Pushforward map of the canonocal projection ``Π^*: T\\mathrm{F}(ℳ) → Tℳ`` that
+maps ``(ẋ, ν̇)`` to ``ẋ``
+"""
 Πˣ(X::TangentFrame{Tx, Tν}) where {Tx, Tν} = X.ẋ
 
 # The group action of a frame on ℝᵈ
@@ -78,10 +105,11 @@ FrameAction(u::Frame{Tx, Tν, TM}, e::T) where {Tx,Tν,T<:Union{AbstractArray, R
 Pˣ(u::Frame, ℳ::T) where {T<:EmbeddedManifold} = TangentFrame(u, u.x, P(u.x, ℳ))
 
 """
-    Horizontal vector fields
-"""
+    Hor(i::Int64, u::Frame, ℳ::TM) where {TM<:EmbeddedManifold}
 
-# Horizontal vector (a tangent frame) corresponding to the i'th unit vector
+Returns the horizontal vector ``H_i(u)`` in ``T_u\\mathrm{F}(ℳ)`` as an element
+of type `TangentFrame`.
+"""
 function Hor(i::Int64, u::Frame, ℳ::TM) where {TM<:EmbeddedManifold}
     x, ν = u.x, u.ν
     _Γ = Γ(x, ℳ)
