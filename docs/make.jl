@@ -10,5 +10,5 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/macorstanje/Manifolds.jl.git"
+    repo = "https://github.com/macorstanje/Manifolds.jl.git"
 )
