@@ -1,11 +1,11 @@
 using Documenter
 
-include("../src/Manifolds.jl")
-using .Manifolds
+include("../src/ManifoldDiffusions.jl")
+using ManifoldDiffusions
 
 makedocs(
-    modules = [Manifolds],
-    sitename = "Manifolds.jl",
+    modules = [ManifoldDiffusions],
+    sitename = "ManifoldDiffusions.jl",
     authors = "Marc Corstanje and contributors",
     doctest = false,
     pages = Any[ # Compat: `Any` for 0.4 compat
@@ -20,7 +20,7 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/macorstanje/Manifolds.jl.git",
+    repo = "github.com/macorstanje/ManifoldDiffusions.jl.git",
     target = "build",
     push_preview = true
 )
