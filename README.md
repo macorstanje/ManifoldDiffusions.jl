@@ -1,6 +1,7 @@
+<!---
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://macorstanje.github.io/Manifolds.jl/stable)
 [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://macorstanje.github.io/Manifolds.jl/latest)
-
+--->
 # Manifolds
 This repository contains code for simulations of diffusions and diffusion bridges on Riemannian manifolds
 
@@ -54,7 +55,7 @@ ExponentialMap(q₀, v₀, ℳ)
 ```
 
 ## Frames and the Frame bundle
-The structure ```Frame``` is defined through a tuple ```(x,ν)```, where x is an array of size d and ν is a d×d-matrix that represents a basis for 𝑇ₓℳ. Given a Frame ```u```, we also define elements in 𝑇ᵤF(ℳ) through a triple ```(u, ẋ, ν̇)``` where  ```ẋ``` is a vector of size d representing a tangent vector to ℳ and ```ν̇``` is a matrix of size d×d. Elementary rules of calculation are defined for tangent frames and frames.
+The structure ```Frame``` is defined through a tuple ```(x,ν)```, where x is an array of size d and ν is a d×d-matrix that represents a basis for 𝑇ₓℳ. Given a Frame ```u```, we also define elements in 𝑇ᵤF(ℳ) through a triple ```(u, ẋ, ν̇)``` where  ```ẋ``` is a vector of size d representing a tangent vector to ℳ and ```ν̇``` is a matrix of size d×d. Elementary rules of calculation are defined for tangent frames and frames.
 
 On the sphere, one can construct frames and tangent frames as follows
 
