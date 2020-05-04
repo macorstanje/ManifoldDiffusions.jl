@@ -33,6 +33,5 @@ makedocs(
 deploydocs(
     repo = "github.com/macorstanje/Manifolds.jl.git",
     target = "build",
-    push_preview = true,
-    versions = ["stable" => "v^", "v#.#", "dev" => "master"],
+    push_preview = true
 )
