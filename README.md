@@ -1,5 +1,5 @@
-[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://USER_NAME.github.io/PACKAGE_NAME.jl/stable)
-[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://USER_NAME.github.io/PACKAGE_NAME.jl/latest)
+[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://macorstanje.github.io/Manifolds.jl/stable)
+[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://macorstanje.github.io/Manifolds.jl/latest)
 
 # Manifolds
 This repository contains code for simulations of diffusions and diffusion bridges on Riemannian manifolds
@@ -95,10 +95,10 @@ Using a Riemannian cometric,  as seen in e.g. Sommer and Svane, 2017, we derive 
 ```math
 \mathrm{d} U_t = H_i(U_t) \circ \mathrm{d} W_t
 ```
-Given a starting frame ```u₀``` and a d-dimensional standard Brownian motion ```W::SamplePath```, we obtain a SamplePath with elements of type ```Frame``` using 
+Given a starting frame ```u₀``` and a d-dimensional standard Brownian motion ```W::SamplePath```, we obtain a SamplePath with elements of type ```Frame``` using
 
 ```@docs
-StochasticDevelopment(W, u₀, ℳ) 
+StochasticDevelopment(W, u₀, ℳ)
 ```
 
 ## Literature
