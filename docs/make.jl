@@ -1,5 +1,4 @@
 using Documenter
-Documenter.generate("Manifolds")
 
 include("../src/Manifolds.jl")
 using .Manifolds
