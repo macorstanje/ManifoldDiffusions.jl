@@ -1,4 +1,9 @@
 # Various manifolds and basic functions
+
+```@meta
+CurrentModule = Manifolds
+```
+
 ```@docs
 Manifold
 EmbeddedManifold
