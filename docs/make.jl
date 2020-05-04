@@ -21,6 +21,5 @@ makedocs(
 
 deploydocs(
     repo = "github.com/macorstanje/ManifoldDiffusions.jl.git",
-    target = "build",
     push_preview = true
 )
