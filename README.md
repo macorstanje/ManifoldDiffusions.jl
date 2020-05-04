@@ -23,7 +23,7 @@ as well as the Cristoffel symbols Γ and a Hamiltonian.
 ### Example: Unit Sphere
 The unit sphere is equipped with the southern sterograpgical projection by default.
 
-```@docs
+```
   𝕊 = Sphere(1.0)
 
   # The point (0,0,-1) corresponds with local coorinates q = (0,0)
