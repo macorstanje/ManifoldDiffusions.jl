@@ -5,7 +5,6 @@ julia:
   - nightly
 
 os:
-  - osx
   - linux
 
 notifications:
@@ -15,7 +14,8 @@ branches:
   only:
     - master
     - gh-pages
-
+after_success:
+  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder())'
 jobs:
   include:
     - stage: "Documentation"

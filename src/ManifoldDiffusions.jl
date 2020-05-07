@@ -25,7 +25,6 @@ module ManifoldDiffusions
     using LinearAlgebra
     using StaticArrays
     using Einsum
-    using Plots
 
     # Definitions of the manifolds additional properties
     include("Definitions.jl")

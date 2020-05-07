@@ -14,10 +14,6 @@ Hor
 
 ```@docs
 FrameBundle
-g
 Hamiltonian
-Hamiltonian
-Geodesic
-ExponentialMap
-StochasticDevelopment
+StochasticDevelopment!
 ```

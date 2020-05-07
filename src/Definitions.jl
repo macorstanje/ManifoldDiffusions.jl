@@ -157,7 +157,8 @@ Elements satisfy ``(x^2+y^2+z^2+R^2-r^2)^2=4R^2(x^2+y^2)``.
 
 For a Torus `𝕋 = Torus(R, r)`, we have
 
-- ``f(q, 𝕋) =
+- ``f(q, 𝕋) = (q_1^2+q_2^2+q_3^2+R^2-r^2)^2-4R^2(q_1^2+q_2^2)``
+- ``F(q, 𝕋) = \\begin{pmatrix} (R+r\\cos q_1)\\cos q_2 & (R+r\\cos q_1)\\sin q_2 & r\\sin q_1 \\end{pmatrix} ``
 
 # Example: Generate a torus with ``R=3`` and ``r=1``
 ```julia-repl
@@ -203,6 +204,11 @@ end
 Settings for the Paraboloid. Call `Paraboloid(a,b)` to generate a paraboloid
 with parameters `a<:Real` and outer radius `b<:Real`.
 Elements satisfy ``(x/a)^2+(y/b)^2 = z``.
+
+For a paraboloid `ℙ = Paraboloid(a, b)`, we have
+
+- ``f(q, ℙ) = \\left(\\frac{q_1}{a}\\right)^2 + \\left(\\frac{q_2}{b}\\right)^2-q_3 ``
+- ``F(q, ℙ) = \\begin{pmatrix} q_1 & q_2 & \\left(\\frac{q_1}{a}\\right)^2 + \\left(\\frac{q_2}{b}\\right)^2 \\end{pmatrix} ``
 
 # Example: Generate a torus with ``a=0`` and ``b=1``
 ```julia-repl
