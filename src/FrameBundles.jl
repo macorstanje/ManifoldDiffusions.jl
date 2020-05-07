@@ -1,16 +1,19 @@
+"""
+    FrameBundle
 
-# The frame bundle over a manifold ℳ
+The object `FrameBundle(ℳ)` represents the frame bundle over a manifold ℳ.
+"""
 struct FrameBundle{TM} <: EmbeddedManifold
     ℳ::TM
     FrameBundle(ℳ::TM) where {TM<:EmbeddedManifold} = new{TM}(ℳ)
 end
 
-"""
-    Riemannian structure on the Frame bundle
-"""
-
-# Riemannian cometric on the Frame bundle
 Σ(u::Frame, v::T, w::T) where {T<:AbstractArray} = dot(inv(u.ν)*v , inv(u.ν)*w)
+"""
+    g(X::TangentFrame, Y::TangentFrame)
+
+Adds a Riemannian structure to the Frame bundle by introducing a cometric
+"""
 function g(X::TangentFrame, Y::TangentFrame)
         if X.u != Y.u
             error("Vectors are in different tangent spaces")
@@ -18,7 +21,11 @@ function g(X::TangentFrame, Y::TangentFrame)
     return Σ(X.u, Πˣ(X), Πˣ(Y))
 end
 
-# Hamiltonian
+"""
+    Hamiltonian(u::Frame, p::TangentFrame, Fℳ::FrameBundle{TM})
+
+Returns the Hamiltonian that results from the cometric `g`.
+"""
 function Hamiltonian(u::Frame, p::TangentFrame, Fℳ::FrameBundle{TM}) where {TM}
     if p.u != u
         error("p is not tangent to u")
@@ -26,7 +33,12 @@ function Hamiltonian(u::Frame, p::TangentFrame, Fℳ::FrameBundle{TM}) where {TM
     return .5*g(p,p)
 end
 
-# Hamiltonian as functions of two vectors of size d+d^2
+"""
+    Hamiltonian(x::Tx, p::Tp, Fℳ::FrameBundle{TM})
+
+Different representation of the Hamiltonian as functions of two vectors of size
+``d+d^2``
+"""
 function Hamiltonian(x::Tx, p::Tp, Fℳ::FrameBundle{TM}) where {Tx, Tp<:AbstractArray, TM}
     N = length(x)
     d = Int64((sqrt(1+4*N)-1)/2)
@@ -36,9 +48,11 @@ function Hamiltonian(x::Tx, p::Tp, Fℳ::FrameBundle{TM}) where {Tx, Tp<:Abstrac
 end
 
 """
-    Geodesic flow and the exponential map on the Frame bundle
-"""
+    Geodesic(u₀::Frame, v₀::TangentFrame, tt, Fℳ::FrameBundle{TM})
 
+Returns a geodesic on Fℳ starting at `u₀` with initial velocity `v₀` and
+evaluated at a discretized time interval `tt`.
+"""
 function Geodesic(u₀::Frame, v₀::TangentFrame, tt, Fℳ::FrameBundle{TM}) where {TM}
     d = length(u₀.x)
     if d==1
@@ -54,6 +68,11 @@ function Geodesic(u₀::Frame, v₀::TangentFrame, tt, Fℳ::FrameBundle{TM}) wh
     return uu, vv
 end
 
+"""
+    ExponentialMap(u₀::Frame, v₀::TangentFrame, Fℳ::FrameBundle{TM})
+
+The exponential map on Fℳ starting from `u₀` with initial velocity `v₀`.
+"""
 function ExponentialMap(u₀::Frame, v₀::TangentFrame, Fℳ::FrameBundle{TM}) where {TM}
     tt = collect(0:0.01:1)
     uu, vv = Geodesic(u₀, v₀, tt, Fℳ)
@@ -64,12 +83,7 @@ function ExponentialMap(u₀::Frame, v₀::TangentFrame, Fℳ::FrameBundle{TM}) 
     end
 end
 
-"""
-    Stochastic development
 
-    Simulate the process {Ut} on F(ℳ) given by the SDE
-        dUt = H(Ut)∘dWt
-"""
 
 function IntegrateStep(dW, u::Frame, ℳ)
     x, ν = u.x, u.ν
@@ -80,6 +94,15 @@ function IntegrateStep(dW, u::Frame, ℳ)
     return y
 end
 
+"""
+    StochasticDevelopment!(Y, W, u₀, ℳ; drift)
+
+Simulate the process {Ut} on F(ℳ) starting at `u₀` that solves the SDE
+    ```math
+    dUt = Vᵒ(Ut)dt + H(Ut)∘dWt
+    ```
+This function writes the process in Fℳ in place of `Y`
+"""
 function StochasticDevelopment!(Y, W, u₀, ℳ; drift)
     tt = W.tt
     ww = W.yy
