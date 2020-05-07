@@ -36,17 +36,19 @@ h₀ = HeatKernel(0, Π(u₀), T, v, K, 𝕋)
 
 # Setting a vector field on the Torus
 V(y, θ, 𝕋) = [0. , θ*π ]
-[3π/2, π/2]
-# Three dimensional representation of V
-ForwardDiff.jacobian(x->F(x,𝕋), u₀.x)*V(u₀.x, θ,  𝕋)
-
 # Lift of V
 V⁺(u, θ, 𝕋) = TangentFrame(u, V(Π(u), θ, 𝕋) , u.ν)
+
+# Three dimensional representation of V
+# ForwardDiff.jacobian(x->F(x,𝕋), u₀.x)*V(u₀.x, θ,  𝕋)
+
+
 
 # Simulate U forward with $θ=0.5
 Vᵒ(t, u, 𝕋) = V⁺(u, 0.5, 𝕋)
 W = sample(0:dt:T, Wiener{ℝ{2}}())
 U = StochasticDevelopment(W, u₀, 𝕋; drift=true)
+T = typeof(U)
 
 # pick 10 times in [0,1]
 indices = sort(rand(1:1:length(U.tt), 8))
@@ -58,6 +60,8 @@ push!(indices, length(U.tt))
 Ξ = map(y -> F(y, 𝕋), ξ)
 
 X = map(y -> F(Π(y), 𝕋), U.yy)
+
+plotly()
 TorusPlot(extractcomp(X, 1), extractcomp(X, 2), extractcomp(X, 3), 𝕋)
 plot!(extractcomp(Ξ, 1), extractcomp(Ξ, 2), extractcomp(Ξ, 3), seriestype = :scatter, markersize = 2.0)
 
@@ -72,7 +76,7 @@ end
 
 function ρ̂(t, y, 𝕋)
     k = findmin(abs.(τ.-t))[2]
-    if τ[k] < t
+    if τ[k] <= t
         k += 1
     end
     if k == length(τ)
@@ -94,14 +98,28 @@ function Vᵒ(t, u, 𝕋)
 end
 
 θ=0.5
-W = sample(0:dt:T, Wiener{ℝ{2}}())
-Uᵒ = deepcopy(U)
-StochasticDevelopment!(Uᵒ, W, u₀, 𝕋; drift=true)
+# function simulateGP(τ, θ, u₀)
+#     W = sample(τ[1]:dt:τ[2], Wiener{ℝ{2}}())
+#     Uᵒ = StochasticDevelopment(W, u₀, 𝕋; drift=true)
+#     UUᵒ = copy(Uᵒ)
+#     for i  in 2:length(τ)-1
+#         W = sample(τ[i]:dt:τ[i+1], Wiener{ℝ{2}}(), W.yy[end])
+#         Uᵒ = StochasticDevelopment(W, UUᵒ.yy[end], 𝕋; drift=true)
+#         UUᵒ = T(collect(0:dt:τ[i+1]), vcat(UUᵒ.yy, Uᵒ.yy))
+#     end
+#     return UUᵒ
+# end
+#
+# Uᵒ = simulateGP(τ, θ, u₀)
+
+W = sample(0:dt:1.0, Wiener{ℝ{2}}())
+StochasticDevelopment!(Uᵒ, W, u₀, 𝕋; drift = true)
 
 Xᵒ = map(y -> F(Π(y), 𝕋), Uᵒ.yy)
-TorusPlot(extractcomp(Xᵒ, 1), extractcomp(Xᵒ, 2), extractcomp(Xᵒ, 3), 𝕋)
+plotly()
+TorusPlot(extractcomp(X, 1), extractcomp(X, 2), extractcomp(X, 3), 𝕋)
+plot!(extractcomp(Xᵒ, 1), extractcomp(Xᵒ, 2), extractcomp(Xᵒ, 3), linewidth = 2.0)
 plot!(extractcomp(Ξ, 1), extractcomp(Ξ, 2), extractcomp(Ξ, 3), seriestype = :scatter, markersize = 2.0)
-
 
 """
 
@@ -124,7 +142,7 @@ function llikelihood!(U::SamplePath, W::SamplePath, θ, 𝕋)
         uu[..,k] = u
 
         # Forward simulation of the process
-        ∇logh = ForwardDiff.gradient(y -> log(ĥ(s, y, K, 𝕋)), u.x)
+        ∇logh = ForwardDiff.gradient(y -> log(ĥ(s, y, 𝕋)), u.x)
         vᵒ = V⁺(u, θ, 𝕋) + sum([Hor(i, u, 𝕋)*(inv(u.ν)*∇logh)[i] for i in eachindex(∇logh)])
         u = IntegrateStep(dw, u, 𝕋) + vᵒ*ds
 
@@ -141,7 +159,7 @@ end
     Take MCMC steps to update the driving BMs
 """
 function MCMC(iterations, ε)
-    W = sample(0:dt:T, Wiener{ℝ{2}}())
+    W = sample(0:dt:τ[end], Wiener{ℝ{2}}())
     U = StochasticDevelopment(W, u₀, 𝕋; drift = false)
     Uᵒ = deepcopy(U)
     θ = rand()
@@ -161,7 +179,7 @@ function MCMC(iterations, ε)
     for iter in 1:iterations
 
         # Update antidevelopment
-        W₂ = sample(0:dt:T, Wiener{ℝ{2}}())
+        W₂ = sample(0:dt:τ[end], Wiener{ℝ{2}}())
         Wᵒ = copy(W)
         Wᵒ.yy .= ρ*W.yy + sqrt(1-ρ^2)*W₂.yy
 
@@ -175,7 +193,7 @@ function MCMC(iterations, ε)
         end
 
         # Update paremter
-        θᵒ = θ + ε*rand()
+        θᵒ = θ + ε*(2*rand()-1)
         llᵒ = llikelihood!(Uᵒ, W, θᵒ, 𝕋)
         if log(rand()) <= llᵒ - ll
             U = Uᵒ
@@ -194,25 +212,25 @@ function MCMC(iterations, ε)
 end
 
 
-UU, XX, θθ, acc, acc_θ = MCMC(80, 0.1)
+UU, XX, θθ, acc, acc_θ = MCMC(200, 0.1)
 
 plotly()
 Plots.plot(θθ)
 
-fig = TorusPlot(extractcomp(XXᵒ[1],1), extractcomp(XXᵒ[1],2), extractcomp(XXᵒ[1],3), 𝕋)
-for i in max(acc-10, 0):acc-5
-    TorusPlot!(fig, extractcomp(XXᵒ[i],1), extractcomp(XXᵒ[i],2), extractcomp(XXᵒ[i],3), 𝕋)
+fig = TorusPlot(extractcomp(XX[1],1), extractcomp(XX[1],2), extractcomp(XX[1],3), 𝕋)
+for i in max(acc-5, 0):acc
+    plot!(fig, extractcomp(XX[i],1), extractcomp(XX[i],2), extractcomp(XX[i],3), linewidth = 2.0)
 end
-Plots.plot!([F(u₀.x, 𝕋)[1]], [F(u₀.x, 𝕋)[2]], [F(u₀.x, 𝕋)[3]],
-            seriestype = :scatter,
-            color= :red,
-            legend = true,
-            markersize = 2.5,
-            label = "Start")
-Plots.plot!([F(v, 𝕋)[1]], [F(v, 𝕋)[2]], [F(v, 𝕋)[3]],
+# Plots.plot!([F(u₀.x, 𝕋)[1]], [F(u₀.x, 𝕋)[2]], [F(u₀.x, 𝕋)[3]],
+#             seriestype = :scatter,
+#             color= :red,
+#             legend = true,
+#             markersize = 2.5,
+#             label = "Start")
+Plots.plot!(extractcomp(Ξ, 1), extractcomp(Ξ, 2), extractcomp(Ξ, 3),
             seriestype = :scatter,
             legend = true,
             color = :blue,
-            markersize = 2.5,
-            label = "End")
+            markersize = 2.0,
+            label = "Observations")
 display(fig)
