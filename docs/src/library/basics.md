@@ -1,7 +1,7 @@
 # Various manifolds and basic functions
 
 ```@meta
-CurrentModule = Manifolds
+CurrentModule = ManifoldDiffusions
 ```
 
 ```@docs

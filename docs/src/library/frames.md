@@ -1,7 +1,7 @@
 # Frames and the Frame bundle
 
 ```@meta
-CurrentModule = Manifolds
+CurrentModule = ManifoldDiffusions
 ```
 
 ```@docs
@@ -10,4 +10,14 @@ TangentFrame
 Π
 Πˣ
 Hor
+```
+
+```@docs
+FrameBundle
+g
+Hamiltonian
+Hamiltonian
+Geodesic
+ExponentialMap
+StochasticDevelopment
 ```

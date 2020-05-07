@@ -1,7 +1,7 @@
 # Geodesics
 
 ```@meta
-CurrentModule = Manifolds
+CurrentModule = ManifoldDiffusions
 ```
 
 ```@docs
