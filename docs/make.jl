@@ -1,4 +1,3 @@
-import Pkg; Pkg.add("Documenter")
 using Documenter, ManifoldDiffusions
 
 # include("../src/ManifoldDiffusions.jl")
