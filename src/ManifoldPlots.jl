@@ -3,11 +3,13 @@
     plots of samplepaths, or combined plots on several manifolds
 """
 
-"""
-    Plots on the Sphere
-"""
 
 # Plot a line represented by set of three vectors X, Y, Z, on the sphere
+"""
+    SpherePlot(X::T , Y::T, Z::T, 𝕊::Sphere) where {T<:AbstractArray}
+
+Plot a function that takes values X, Y, Z on the `Sphere` 𝕊.
+"""
 function SpherePlot(X::T , Y::T, Z::T, 𝕊::Sphere) where {T<:AbstractArray}
     if Plots.backend() !== Plots.PlotlyBackend()
         error("Plotly() is not enabled")
@@ -47,16 +49,23 @@ function SpherePlot(X::T , Y::T, Z::T, 𝕊::Sphere) where {T<:AbstractArray}
                 zlabel = "z")
 end
 
-# Plot a SamplePath
-function SpherePlot(X::SamplePath{T}, 𝕊::Sphere) where {T}
+"""
+    SpherePlot(X::SamplePath{T}, 𝕊::Sphere) where {T}
+
+Plot a stochastic process of type `Bridge.SamplePath` on 𝕊.
+"""
+function SpherePlot(X::Bridge.SamplePath{T}, 𝕊::Sphere) where {T}
     X1 = extractcomp(X.yy, 1)
     X2 = extractcomp(X.yy,2)
     X3 = extractcomp(X.yy,3)
     SpherePlot(X1,X2,X3, 𝕊)
 end
 
+"""
+    SphereScatterPlot(X::T, Y::T, Z::T, 𝕊::Sphere) where {T<:AbstractArray}
 
-# Make a scatterplot on the sphere
+Make a scatterplot of coordinates `X, Y, Z` on 𝕊.
+"""
 function SphereScatterPlot(X::T , Y::T, Z::T, 𝕊::Sphere) where {T<:AbstractArray}
     if Plots.backend() !== Plots.PlotlyBackend()
         error("Plotly() is not enabled")
@@ -92,31 +101,21 @@ function SphereScatterPlot(X::T , Y::T, Z::T, 𝕊::Sphere) where {T<:AbstractAr
                 color = fill(RGBA(1.,1.,1.,0.8),lenu,lenv)) # fill(RGBA(1.,1.,1.,0.8),lenu,lenv))
 end
 
-# with a target point
-function SphereScatterPlot(X::T, Y::T, Z::T, target::T, 𝕊::Sphere) where {T<:AbstractArray}
-    if Plots.backend() !== Plots.PlotlyBackend()
-        error("Plotly() is not enabled")
-    end
-    SphereScatterPlot(X, Y, Z, 𝕊)
-    Target = Array{Float64}[]
-    push!(Target, target)
-    Plots.plot!(extractcomp(Target,1), extractcomp(Target,2), extractcomp(Target,3),
-                seriestype = :scatter,
-                color= :red,
-                markersize = 2)
-end
+"""
+    SphereFullPlot(trace, data, target, 𝕊::Sphere; PlotUpdates = true)
 
-
-# A plot of a trace of (for example MCMC-) updates with data and a target added
-function SphereFullPlot(θ, data, target, 𝕊::Sphere; PlotUpdates = true)
+A plot of a trace of (for example MCMC-) updates with data and a target added.
+This function returns a plot on 𝕊 with a line `trace`, points `data` and a point `target`.
+"""
+function SphereFullPlot(trace, data, target, 𝕊::Sphere; PlotUpdates = true)
     if Plots.backend() !== Plots.PlotlyBackend()
         error("Plotly() is not enabled")
     end
     Target = Array{Float64}[]
     push!(Target, target)
-    SpherePlot(extractcomp(θ,1), extractcomp(θ,2), extractcomp(θ,3), 𝕊)
+    SpherePlot(extractcomp(trace,1), extractcomp(trace,2), extractcomp(trace,3), 𝕊)
     if PlotUpdates
-        Plots.plot!(extractcomp(θ,1), extractcomp(θ,2), extractcomp(θ,3),
+        Plots.plot!(extractcomp(trace,1), extractcomp(trace,2), extractcomp(trace,3),
                     seriestype = :scatter,
                     color = :yellow,
                     markersize = 2,
@@ -135,10 +134,10 @@ function SphereFullPlot(θ, data, target, 𝕊::Sphere; PlotUpdates = true)
 end
 
 """
-    Plots on the Torus
-"""
+    TorusPlot(X::T , Y::T, Z::T, 𝕋::Torus) where {T<:AbstractArray}
 
-# Plot a line represented by set of three vectors X, Y, Z, on the Torus
+Plot a function that takes values X, Y, Z on the `Torus` 𝕋.
+"""
 function TorusPlot(X::T, Y::T, Z::T, 𝕋::Torus) where {T<:AbstractArray}
     if Plots.backend() !== Plots.PlotlyBackend()
         error("Plotly() is not enabled")
@@ -173,11 +172,11 @@ function TorusPlot(X::T, Y::T, Z::T, 𝕋::Torus) where {T<:AbstractArray}
                     zlabel = "z")
 end
 
-function TorusPlot!(fig, X::T, Y::T, Z::T, 𝕋::Torus) where {T<:AbstractArray}
-    Plots.plot!(fig, X, Y, Z, linewidth = 2.5)
-end
+"""
+    TorusPlot(X::Bridge.SamplePath{T}, 𝕋::Torus) where {T}
 
-# Plot a SamplePath
+Plot a stochastic process of type `Bridge.SamplePath` on 𝕋.
+"""
 function TorusPlot(X::SamplePath{T}, 𝕋::Torus) where {T}
     X1 = extractcomp(X.yy,1)
     X2 = extractcomp(X.yy,2)
@@ -185,7 +184,11 @@ function TorusPlot(X::SamplePath{T}, 𝕋::Torus) where {T}
     TorusPlot(X1, X2, X3, 𝕋)
 end
 
-# Make a scatterplot on the Torus
+"""
+    TorusScatterPlot(X::T, Y::T, Z::T, 𝕋::Torus) where {T<:AbstractArray}
+
+Make a scatterplot of coordinates `X, Y, Z` on 𝕋.
+"""
 function TorusScatterPlot(X::T, Y::T, Z::T, 𝕋::Torus) where {T<:AbstractArray}
     if Plots.backend() !== Plots.PlotlyBackend()
         error("Plotly() is not enabled")
@@ -222,30 +225,21 @@ function TorusScatterPlot(X::T, Y::T, Z::T, 𝕋::Torus) where {T<:AbstractArray
                     zlabel = "z")
 end
 
-# with a target point
-function TorusScatterPlot(X::T, Y::T, Z::T, target::T, 𝕋::Torus) where {T<:AbstractArray}
-    if Plots.backend() !== Plots.PlotlyBackend()
-        error("Plotly() is not enabled")
-    end
-    TorusScatterPlot(X, Y, Z, 𝕋)
-    Target = Array{Float64}[]
-    push!(Target, target)
-    Plots.plot!(extractcomp(Target,1), extractcomp(Target,2), extractcomp(Target,3),
-                seriestype = :scatter,
-                color= :red,
-                markersize = 2)
-end
+"""
+    TorusFullPlot(trace, data, target, 𝕋::Torus; PlotUpdates = true)
 
-# A plot of a trace of (for example MCMC-) updates with data and a target added
-function TorusFullPlot(θ, data, target, 𝕋; PlotUpdates = true)
+A plot of a trace of (for example MCMC-) updates with data and a target added.
+This function returns a plot on 𝕋 with a line `trace`, points `data` and a point `target`.
+"""
+function TorusFullPlot(trace, data, target, 𝕋; PlotUpdates = true)
     if Plots.backend() !== Plots.PlotlyBackend()
         error("Plotly() is not enabled")
     end
     Target = Array{Float64}[]
     push!(Target, target)
-    TorusPlot(extractcomp(θ,1), extractcomp(θ,2), extractcomp(θ,3), 𝕋)
+    TorusPlot(extractcomp(trace,1), extractcomp(trace,2), extractcomp(trace,3), 𝕋)
     if PlotUpdates
-        Plots.plot!(extractcomp(θ,1), extractcomp(θ,2), extractcomp(θ,3),
+        Plots.plot!(extractcomp(trace,1), extractcomp(trace,2), extractcomp(trace,3),
                     seriestype = :scatter,
                     color = :yellow,
                     markersize = 2,
@@ -264,10 +258,10 @@ function TorusFullPlot(θ, data, target, 𝕋; PlotUpdates = true)
 end
 
 """
-    Plots on a Paraboloid
-"""
+    ParaboloidPlot(X::T , Y::T, Z::T, ℙ::Paraboloid) where {T<:AbstractArray}
 
-# Plot a line represented by set of three vectors X, Y, Z, on the Paraboloid
+Plot a function that takes values X, Y, Z on the `Paraboloid` ℙ.
+"""
 function ParaboloidPlot(X::T,Y::T,Z::T, ℙ::Paraboloid) where {T<:AbstractArray}
     if Plots.backend() !== Plots.PlotlyBackend()
         error("Plotly() is not enabled")
@@ -305,15 +299,23 @@ function ParaboloidPlot(X::T,Y::T,Z::T, ℙ::Paraboloid) where {T<:AbstractArray
                     legend = false)
 end
 
-# Plot a SamplePath
-function ParaboloidPlot(X::SamplePath{T}, ℙ::Paraboloid) where {T}
+"""
+    ParaboloidPlot(X::Bridge.SamplePath{T}, ℙ::Paraboloid) where {T}
+
+Plot a stochastic process of type `Bridge.SamplePath` on ℙ.
+"""
+function ParaboloidPlot(X::Bridge.SamplePath{T}, ℙ::Paraboloid) where {T}
     X1 = extractcomp(X.yy, 1)
     X2 = extractcomp(X.yy,2)
     X3 = extractcomp(X.yy,3)
     ParaboloidPlot(X1,X2,X3, ℙ)
 end
 
-# Make a scatterplot on the Paraboloid
+"""
+    TorusScatterPlot(X::T, Y::T, Z::T, ℙ::Paraboloid) where {T<:AbstractArray}
+
+Make a scatterplot of coordinates `X, Y, Z` on ℙ.
+"""
 function ParaboloidScatterPlot(X::T, Y::T, Z::T, ℙ::Paraboloid) where {T<:AbstractArray}
     if Plots.backend() !== Plots.PlotlyBackend()
         error("Plotly() is not enabled")
@@ -347,21 +349,12 @@ function ParaboloidScatterPlot(X::T, Y::T, Z::T, ℙ::Paraboloid) where {T<:Abst
                    legend = false)
 end
 
-# With a target point added
-function ParaboloidScatterPlot(X::T, Y::T, Z::T, target::T, ℙ::Paraboloid) where {T<:AbstractArray}
-    if Plots.backend() !== Plots.PlotlyBackend()
-        error("Plotly() is not enabled")
-    end
-    ParaboloidScatterPlot(X,Y,Z,ℙ)
-    Target = Array{Float64}[]
-    push!(Target, target)
-    Plots.plot!(extractcomp(Target,1), extractcomp(Target,2), extractcomp(Target,3),
-                seriestype = :scatter,
-                color= :red,
-                markersize = 2)
-end
+"""
+    ParaboloidFullPlot(trace, data, target, ℙ::Paraboloid; PlotUpdates = true)
 
-# A plot of a trace of (for example MCMC-) updates with data and a target added
+A plot of a trace of (for example MCMC-) updates with data and a target added.
+This function returns a plot on ℙ with a line `trace`, points `data` and a point `target`.
+"""
 function ParaboloidFullPlot(θ, data, target, ℙ::Paraboloid; PlotUpdates = true)
     if Plots.backend() !== Plots.PlotlyBackend()
         error("Plotly() is not enabled")
