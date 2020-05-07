@@ -1,11 +1,4 @@
 """
-    This file includes various functions to make scatterplots,
-    plots of samplepaths, or combined plots on several manifolds
-"""
-
-
-# Plot a line represented by set of three vectors X, Y, Z, on the sphere
-"""
     SpherePlot(X::T , Y::T, Z::T, 𝕊::Sphere) where {T<:AbstractArray}
 
 Plot a function that takes values X, Y, Z on the `Sphere` 𝕊.
