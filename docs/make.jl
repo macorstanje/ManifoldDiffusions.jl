@@ -1,7 +1,7 @@
-using Documenter
+using Documenter, ManifoldDiffusions
 
-include("../src/ManifoldDiffusions.jl")
-using ManifoldDiffusions
+# include("../src/ManifoldDiffusions.jl")
+# using ManifoldDiffusions
 
 makedocs(
     modules = [ManifoldDiffusions],
