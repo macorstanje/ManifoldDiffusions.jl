@@ -1,7 +1,7 @@
 <!---
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://macorstanje.github.io/Manifolds.jl/stable)
 --->
-[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://macorstanje.github.io/ManifoldDiffusions.jl/dev)
+[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://macorstanje.github.io/ManifoldDiffusions.jl/dev)
 # Manifolds
 This repository contains code for simulations of diffusions and diffusion bridges on Riemannian manifolds
 
