@@ -140,7 +140,6 @@ end
 """
     Take MCMC steps to update the driving BMs
 """
-
 function MCMC(iterations, ε)
     W = sample(0:dt:T, Wiener{ℝ{2}}())
     U = StochasticDevelopment(W, u₀, 𝕋; drift = false)
