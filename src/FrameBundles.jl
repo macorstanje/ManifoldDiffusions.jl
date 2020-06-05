@@ -98,6 +98,7 @@ end
 
 
 # Copied from Moritz Schauer, Bridge.jl
+abstract type AbstractPath{T} end
 struct SamplePath{T} <: AbstractPath{T}
     tt::Vector{Float64}
     yy::Vector{T}
