@@ -45,9 +45,9 @@ end
 """
     SpherePlot(X::SamplePath{T}, 𝕊::Sphere) where {T}
 
-Plot a stochastic process of type `Bridge.SamplePath` on 𝕊.
+Plot a stochastic process of type `SamplePath` on 𝕊.
 """
-function SpherePlot(X::Bridge.SamplePath{T}, 𝕊::Sphere) where {T}
+function SpherePlot(X::SamplePath{T}, 𝕊::Sphere) where {T}
     X1 = extractcomp(X.yy, 1)
     X2 = extractcomp(X.yy,2)
     X3 = extractcomp(X.yy,3)
@@ -166,9 +166,9 @@ function TorusPlot(X::T, Y::T, Z::T, 𝕋::Torus) where {T<:AbstractArray}
 end
 
 """
-    TorusPlot(X::Bridge.SamplePath{T}, 𝕋::Torus) where {T}
+    TorusPlot(X::SamplePath{T}, 𝕋::Torus) where {T}
 
-Plot a stochastic process of type `Bridge.SamplePath` on 𝕋.
+Plot a stochastic process of type `SamplePath` on 𝕋.
 """
 function TorusPlot(X::SamplePath{T}, 𝕋::Torus) where {T}
     X1 = extractcomp(X.yy,1)
@@ -293,11 +293,11 @@ function ParaboloidPlot(X::T,Y::T,Z::T, ℙ::Paraboloid) where {T<:AbstractArray
 end
 
 """
-    ParaboloidPlot(X::Bridge.SamplePath{T}, ℙ::Paraboloid) where {T}
+    ParaboloidPlot(X::SamplePath{T}, ℙ::Paraboloid) where {T}
 
-Plot a stochastic process of type `Bridge.SamplePath` on ℙ.
+Plot a stochastic process of type `SamplePath` on ℙ.
 """
-function ParaboloidPlot(X::Bridge.SamplePath{T}, ℙ::Paraboloid) where {T}
+function ParaboloidPlot(X::SamplePath{T}, ℙ::Paraboloid) where {T}
     X1 = extractcomp(X.yy, 1)
     X2 = extractcomp(X.yy,2)
     X3 = extractcomp(X.yy,3)
