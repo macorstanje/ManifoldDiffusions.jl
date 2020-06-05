@@ -12,3 +12,15 @@ SpherePlot
 SphereScatterPlot
 SphereFullPlot
 ```
+
+```@docs
+TorusPlot
+TorusScatterPlot
+TorusFullPlot
+```
+
+```@docs
+ParaboloidPlot
+ParaboloidScatterPlot
+ParaboloidFullPlot
+```
