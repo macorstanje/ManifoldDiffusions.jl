@@ -40,5 +40,4 @@ module ManifoldDiffusions
 
     # Tools for creating plots on manifolds
     include("ManifoldPlots.jl")
-
 end
