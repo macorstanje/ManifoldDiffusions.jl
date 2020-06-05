@@ -12,7 +12,7 @@ module ManifoldDiffusions
     export Geodesic, ExponentialMap, ParallelTransport
 
     # FrameBundles
-    export FrameBundle, Hamiltonian, Geodesic, ExponentialMap, StochasticDevelopment!, StochasticDevelopment
+    export FrameBundle, Hamiltonian, Geodesic, ExponentialMap, StochasticDevelopment!, StochasticDevelopment, SamplePath
 
     # ManifoldPlots
     export SpherePlot, SphereScatterPlot, SphereFullPlot
