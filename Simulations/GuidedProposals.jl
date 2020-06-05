@@ -1,4 +1,5 @@
 include("../src/ManifoldDiffusions.jl")
+using ManifoldDiffusions
 using ProgressMeter
 using LinearAlgebra
 using ForwardDiff
@@ -29,6 +30,9 @@ end
 
 T = 1.0
 dt = 0.001
+TimeChange(T) = (x) ->  x * (2-x/T)
+tt = TimeChange(T).(0.:dt:T)
+
 u₀ = Frame([π/2, 0] , [1. 0. ; 0.  1/3] , 𝕋)
 v = [3π/2, π]
 
@@ -46,12 +50,13 @@ V⁺(u, θ, 𝕋) = TangentFrame(u, V(Π(u), θ, 𝕋) , u.ν)
 
 # Simulate U forward with $θ=0.5
 Vᵒ(t, u, 𝕋) = V⁺(u, 0.5, 𝕋)
-W = sample(0:dt:T, Wiener{ℝ{2}}())
+
+W = sample(tt, Wiener{ℝ{2}}())
 U = StochasticDevelopment(W, u₀, 𝕋; drift=true)
-T = typeof(U)
 
 # pick 10 times in [0,1]
-indices = sort(rand(1:1:length(U.tt), 8))
+n = 10 # amount of observations
+indices = sample(2:1:length(U.tt)-1, n-2, replace=false, ordered=true)
 pushfirst!(indices, 1)
 push!(indices, length(U.tt))
 τ = U.tt[indices]
@@ -98,21 +103,9 @@ function Vᵒ(t, u, 𝕋)
 end
 
 θ=0.5
-# function simulateGP(τ, θ, u₀)
-#     W = sample(τ[1]:dt:τ[2], Wiener{ℝ{2}}())
-#     Uᵒ = StochasticDevelopment(W, u₀, 𝕋; drift=true)
-#     UUᵒ = copy(Uᵒ)
-#     for i  in 2:length(τ)-1
-#         W = sample(τ[i]:dt:τ[i+1], Wiener{ℝ{2}}(), W.yy[end])
-#         Uᵒ = StochasticDevelopment(W, UUᵒ.yy[end], 𝕋; drift=true)
-#         UUᵒ = T(collect(0:dt:τ[i+1]), vcat(UUᵒ.yy, Uᵒ.yy))
-#     end
-#     return UUᵒ
-# end
-#
-# Uᵒ = simulateGP(τ, θ, u₀)
 
-W = sample(0:dt:1.0, Wiener{ℝ{2}}())
+
+W = sample(tt, Wiener{ℝ{2}}())
 StochasticDevelopment!(Uᵒ, W, u₀, 𝕋; drift = true)
 
 Xᵒ = map(y -> F(Π(y), 𝕋), Uᵒ.yy)
@@ -127,7 +120,28 @@ We have
     dℙ⁺/dℙ⁰(Uᵒ) ∝ exp{-∫₀ᵗ V⁺ĥ(s, U_s)/ĥ(s, U_s) ds }
 
 """
-function llikelihood!(U::SamplePath, W::SamplePath, θ, 𝕋)
+
+function loglikelihood(U::SamplePath, W::SamplePath, θ, 𝕋)
+    tt = U.tt
+    uu = U.yy
+    ww = W.yy
+
+    som::Float64 = 0.
+    for k in 1:length(tt)-1
+        ds = tt[k+1] - tt[k]
+        s = tt[k]
+
+        u = U.yy[k]
+
+        ∇logh = ForwardDiff.gradient(y -> log(ĥ(s, y, 𝕋)), u.x)
+
+        # Extra likelihood term
+        som += dot(V(u.x,θ, 𝕋), ∇logh)*ds
+    end
+    som
+end
+
+function loglikelihood!(U::SamplePath, W::SamplePath, u₀, θ, 𝕋)
     tt = U.tt
     uu = U.yy
     ww = W.yy
@@ -153,16 +167,80 @@ function llikelihood!(U::SamplePath, W::SamplePath, θ, 𝕋)
     som
 end
 
+function loglikelihood(W::SamplePath, u₀, θ, 𝕋)
+    let U = Bridge.samplepath(W.tt, zero(u₀)); ll=loglikelihood!(U, W, u₀, θ, 𝕋); U,ll end
+end
+
+loglikelihood(W, u₀, 0.5, 𝕋)
+
+function UpdateBridges!(W, U, ρ, θ, τ)
+    acc = zeros(length(τ)-1)
+    u₀ = U.yy[1]
+    for i  in 1:length(τ)-1
+        # indices of τ[i] and  τ[i+1] in the array W.tt
+        i⁻ = findall(x -> x == τ[i], W.tt)[1]
+        i⁺ = findall(x -> x == τ[i+1], W.tt)[1]
+        W₂ = sample(W.tt[i⁻:1:i⁺], Wiener{ℝ{2}}(), W.yy[i⁻])
+        Wᵒ = copy(W₂)
+        Wᵒ.yy .= ρ*W.yy[i⁻:1:i⁺] + sqrt(1-ρ^2)W₂.yy
+        Uᵒ, llᵒ = loglikelihood(Wᵒ, U.yy[i⁻], θ, 𝕋)
+
+        ll = loglikelihood(U[i⁻:1:i⁺], W[i⁻:1:i⁺], θ, 𝕋)
+        if log(rand()) <= llᵒ - ll
+            W.yy[i⁻:1:i⁺] .= Wᵒ.yy
+            U.yy[i⁻:1:i⁺] .= Uᵒ.yy
+            ll = llᵒ
+            acc[i] += 1
+        end
+    end
+    acc
+end
+
+W = sample(tt, Wiener{ℝ{2}}())
+U = StochasticDevelopment(W, u₀, 𝕋;drift=true)
+
+X = map(y -> F(Π(y), 𝕋), U.yy)
+
+plotly()
+TorusPlot(extractcomp(X, 1), extractcomp(X, 2), extractcomp(X, 3), 𝕋)
+plot!(extractcomp(Ξ, 1), extractcomp(Ξ, 2), extractcomp(Ξ, 3), seriestype = :scatter, markersize = 2.0)
+
+Uᵒ = copy(U)
+UpdateBridges!(W, Uᵒ, .5, .5, τ)
+
+Xᵒ = map(y -> F(Π(y), 𝕋), Uᵒ.yy)
+plotly()
+TorusPlot(extractcomp(X, 1), extractcomp(X, 2), extractcomp(X, 3), 𝕋)
+plot!(extractcomp(Xᵒ, 1), extractcomp(Xᵒ, 2), extractcomp(Xᵒ, 3), linewidth = 2.0)
+plot!(extractcomp(Ξ, 1), extractcomp(Ξ, 2), extractcomp(Ξ, 3), seriestype = :scatter, markersize = 2.0)
 
 
 """
     Take MCMC steps to update the driving BMs
 """
+
+function adaptstepsize!(δ, n, accinfo)
+    adaptskip = 10
+    if mod(n,adaptskip)==0
+        η(n) = min(0.1, 10/sqrt(n))
+
+        targetaccept = 0.5
+
+        recent_mean = ( accinfo[end] - accinfo[end-adaptskip+1] )/adaptskip
+        if recent_mean > targetaccept
+            δ *= exp(η(n))
+        else
+            δ *= exp(-η(n))
+        end
+    end
+end
+
+
 function MCMC(iterations, ε)
     W = sample(0:dt:τ[end], Wiener{ℝ{2}}())
     U = StochasticDevelopment(W, u₀, 𝕋; drift = false)
     Uᵒ = deepcopy(U)
-    θ = rand()
+    θ = 2*rand()-1
     ll = llikelihood!(Uᵒ, W, θ,  𝕋)
 
     X  = map(y -> F(Π(y), 𝕋), Uᵒ.yy)
@@ -171,54 +249,58 @@ function MCMC(iterations, ε)
     UU = [Uᵒ]
     XX = [X]
 
-    acc = 0
-    acc_θ = 0
+    acc = zeros(length(τ)-1)
+    acc_θ = [0]
     ρ = .5
     ll_array = [ll]
     p = Progress(iterations, 1, "Percentage completed ...", 50)
     for iter in 1:iterations
 
         # Update antidevelopment
-        W₂ = sample(0:dt:τ[end], Wiener{ℝ{2}}())
-        Wᵒ = copy(W)
-        Wᵒ.yy .= ρ*W.yy + sqrt(1-ρ^2)*W₂.yy
+        # W₂ = sample(0:dt:τ[end], Wiener{ℝ{2}}())
+        # Wᵒ = copy(W)
+        # Wᵒ.yy .= ρ*W.yy + sqrt(1-ρ^2)*W₂.yy
+        #
+        # # Simulate a proposal and compute the log-likelihood
+        # llᵒ = llikelihood!(Uᵒ, Wᵒ, θ, 𝕋)
+        # if log(rand()) <= llᵒ - ll
+        #     U = Uᵒ
+        #     X = map(y -> F(Π(y), 𝕋), Uᵒ.yy)
+        #     ll = llᵒ
+        #     acc += 1
+        # end
 
-        # Simulate a proposal and compute the log-likelihood
-        llᵒ = llikelihood!(Uᵒ, Wᵒ, θ, 𝕋)
-        if log(rand()) <= llᵒ - ll
-            U = Uᵒ
-            X = map(y -> F(Π(y), 𝕋), Uᵒ.yy)
-            ll = llᵒ
-            acc += 1
-        end
+        acc += UpdateBridges!(W, U, ρ, θ, τ)
 
         # Update paremter
         θᵒ = θ + ε*(2*rand()-1)
-        llᵒ = llikelihood!(Uᵒ, W, θᵒ, 𝕋)
+        llᵒ = loglikelihood!(Uᵒ, W, u₀, θᵒ, 𝕋)
         if log(rand()) <= llᵒ - ll
             U = Uᵒ
             X = map(y -> F(Π(y), 𝕋), Uᵒ.yy)
             θ = θᵒ
             ll = llᵒ
-            acc_θ += 1
+            push!(acc_θ, acc_θ[end] + 1)
+        else
+            push!(acc_θ, acc_θ[end])
         end
-
         push!(UU, U)
         push!(XX, X)
         push!(θθ, θ)
         next!(p)
+        adaptstepsize!(ε, iter, acc_θ)
     end
     return UU, XX, θθ, acc, acc_θ
 end
 
 
 UU, XX, θθ, acc, acc_θ = MCMC(200, 0.1)
-
+acc_θ
 plotly()
 Plots.plot(θθ)
 
 fig = TorusPlot(extractcomp(XX[1],1), extractcomp(XX[1],2), extractcomp(XX[1],3), 𝕋)
-for i in max(acc-5, 0):acc
+for i in max(acc_θ[end]-5+1, 1):acc_θ[end]+1
     plot!(fig, extractcomp(XX[i],1), extractcomp(XX[i],2), extractcomp(XX[i],3), linewidth = 2.0)
 end
 # Plots.plot!([F(u₀.x, 𝕋)[1]], [F(u₀.x, 𝕋)[2]], [F(u₀.x, 𝕋)[3]],

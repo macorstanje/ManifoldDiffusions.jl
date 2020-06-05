@@ -1,0 +1,7 @@
+Julia 0.7
+Bridge
+ForwardDiff
+Plots
+LinearAlgebra
+Einsum
+StaticArrays

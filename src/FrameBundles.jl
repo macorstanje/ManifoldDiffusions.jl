@@ -99,7 +99,7 @@ end
 
 Simulate the process {Ut} on F(ℳ) starting at `u₀` that solves the SDE
     ```math
-    dUt = Vᵒ(Ut)dt + H(Ut)∘dWt
+    dUt = V⁺(Ut)dt + H(Ut)∘dWt
     ```
 This function writes the process in Fℳ in place of `Y`
 """
