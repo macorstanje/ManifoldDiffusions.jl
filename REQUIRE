@@ -1,5 +1,4 @@
-Julia 0.7
-Bridge
+julia 0.7
 ForwardDiff
 Plots
 LinearAlgebra

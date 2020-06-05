@@ -19,7 +19,7 @@ module ManifoldDiffusions
     export TorusPlot, TorusScatterPlot, TorusFullPlot
     export ParaboloidPlot, ParaboloidScatterPlot, ParaboloidFullPlot
 
-    using Bridge
+    # using Bridge
     using Plots
     using ForwardDiff
     using LinearAlgebra

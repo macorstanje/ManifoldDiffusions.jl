@@ -9,6 +9,7 @@ struct FrameBundle{TM} <: EmbeddedManifold
 end
 
 Σ(u::Frame, v::T, w::T) where {T<:AbstractArray} = dot(inv(u.ν)*v , inv(u.ν)*w)
+
 """
     g(X::TangentFrame, Y::TangentFrame)
 
@@ -93,6 +94,8 @@ function IntegrateStep(dW, u::Frame, ℳ)
     y = u + sum([(Hor(i,uᴱ,ℳ) + Hor(i, u,ℳ))*dW[i]*0.5 for i in eachindex(dW)])
     return y
 end
+
+import Bridge: SamplePath
 
 """
     StochasticDevelopment!(Y, W, u₀, ℳ; drift)
