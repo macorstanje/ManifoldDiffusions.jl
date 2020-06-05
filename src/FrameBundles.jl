@@ -95,8 +95,24 @@ function IntegrateStep(dW, u::Frame, ℳ)
     return y
 end
 
-import Bridge: SamplePath
 
+
+# Copied from Moritz Schauer, Bridge.jl
+struct SamplePath{T} <: AbstractPath{T}
+    tt::Vector{Float64}
+    yy::Vector{T}
+    SamplePath{T}(tt, yy) where {T} = new(tt, yy)
+end
+SamplePath(tt, yy::Vector{T}) where {T} = SamplePath{T}(tt, yy)
+
+samplepath(tt, v) = samplepath(tt, v, ismutable(v))
+
+samplepath(tt, v, ::Val{false}) = SamplePath(tt, fill(v, length(tt)))
+samplepath(tt, v, ::Val{true}) = SamplePath(tt, [copy(v) for t in tt])
+
+
+copy(X::SamplePath{T}) where {T} = SamplePath{T}(copy(X.tt), copy(X.yy))
+length(X::SamplePath) = length(X.tt)
 """
     StochasticDevelopment!(Y, W, u₀, ℳ; drift)
 
