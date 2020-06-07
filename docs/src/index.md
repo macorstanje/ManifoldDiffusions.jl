@@ -1,3 +1,3 @@
 # Documentation for Manifolds.jl
 
-Homepage
+To do ... 
