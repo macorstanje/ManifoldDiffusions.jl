@@ -1,3 +1,3 @@
 # Manual
 
-Pending
+To do ...
