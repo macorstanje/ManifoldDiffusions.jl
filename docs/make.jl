@@ -19,11 +19,4 @@ makedocs(
 
 deploydocs(
     repo = "github.com/macorstanje/ManifoldDiffusions.jl.git",
-    # branch = "gh-pages",
-    # deps = nothing,
-    # target = "site",
-    # devurl = "dev",
-    # make = nothing,
-    # push_preview=true,
-    # forcepush = true,
 )
