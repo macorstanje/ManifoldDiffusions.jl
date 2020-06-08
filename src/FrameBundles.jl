@@ -1,7 +1,7 @@
 """
     FrameBundle
 
-The object `FrameBundle(ℳ)` represents the frame bundle over a manifold ``\mathcal{M}``.
+The object `FrameBundle(ℳ)` represents the frame bundle over a manifold ``\\mathcal{M}``.
 """
 struct FrameBundle{TM} <: EmbeddedManifold
     ℳ::TM
@@ -117,8 +117,8 @@ length(X::SamplePath) = length(X.tt)
 """
     StochasticDevelopment!(Y, W, u₀, ℳ; drift)
 
-Simulate the process ``\{U_t\}_t`` on ``\mathrm{F}(\mathcal{M})`` starting at
-`u₀` that solves the SDE ``\mathrm{d}U_t = V^*(U_t)\mathrm{d}t + H(U_t) \circ \mathrm{d}W_t``
+Simulate the process ``\\{U_t\\}_t`` on ``\\mathrm{F}(\\mathcal{M})`` starting at
+`u₀` that solves the SDE ``\\mathrm{d}U_t = V^*(U_t)\mathrm{d}t + H(U_t) \\circ \\mathrm{d}W_t``
 This function writes the process in `Fℳ` in place of `Y`
 """
 function StochasticDevelopment!(Y, W, u₀, ℳ; drift)
