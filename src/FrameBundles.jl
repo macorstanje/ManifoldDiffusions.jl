@@ -1,7 +1,7 @@
 """
     FrameBundle
 
-The object `FrameBundle(ℳ)` represents the frame bundle over a manifold ℳ.
+The object `FrameBundle(ℳ)` represents the frame bundle over a manifold ``\mathcal{M}``.
 """
 struct FrameBundle{TM} <: EmbeddedManifold
     ℳ::TM
@@ -51,7 +51,7 @@ end
 """
     Geodesic(u₀::Frame, v₀::TangentFrame, tt, Fℳ::FrameBundle{TM})
 
-Returns a geodesic on Fℳ starting at `u₀` with initial velocity `v₀` and
+Returns a geodesic on `Fℳ` starting at `u₀` with initial velocity `v₀` and
 evaluated at a discretized time interval `tt`.
 """
 function Geodesic(u₀::Frame, v₀::TangentFrame, tt, Fℳ::FrameBundle{TM}) where {TM}
@@ -72,7 +72,7 @@ end
 """
     ExponentialMap(u₀::Frame, v₀::TangentFrame, Fℳ::FrameBundle{TM})
 
-The exponential map on Fℳ starting from `u₀` with initial velocity `v₀`.
+The exponential map on `Fℳ` starting from `u₀` with initial velocity `v₀`.
 """
 function ExponentialMap(u₀::Frame, v₀::TangentFrame, Fℳ::FrameBundle{TM}) where {TM}
     tt = collect(0:0.01:1)
@@ -117,11 +117,9 @@ length(X::SamplePath) = length(X.tt)
 """
     StochasticDevelopment!(Y, W, u₀, ℳ; drift)
 
-Simulate the process {Ut} on F(ℳ) starting at `u₀` that solves the SDE
-    ```math
-    dUt = V⁺(Ut)dt + H(Ut)∘dWt
-    ```
-This function writes the process in Fℳ in place of `Y`
+Simulate the process ``\{U_t\}_t`` on ``\mathrm{F}(\mathcal{M})`` starting at
+`u₀` that solves the SDE ``\mathrm{d}U_t = V^*(U_t)\mathrm{d}t + H(U_t) \circ \mathrm{d}W_t``
+This function writes the process in `Fℳ` in place of `Y`
 """
 function StochasticDevelopment!(Y, W, u₀, ℳ; drift)
     tt = W.tt
