@@ -18,20 +18,24 @@ extractcomp(v, i) = map(x->x[i], v)
 """
     EmbeddedManifold <: Manifold
 
-EmbeddedManifold creates a manifold `ℳ = f^{-1}({0})` of dimension d=N-n
-where ``f`` should be a smooth function ``ℝ^N → ℝ^n``. An EmbeddedManifold ℳ
+EmbeddedManifold creates a manifold ``\\mathcal{M} = f^{-1}(\\{0\\})`` of
+dimension ``d=N-n`` where ``f`` should be a smooth function
+``\\mathbb{R}^N \\to \\mathbb{R}^n``. An EmbeddedManifold `ℳ` can be equipped
 equipped with functions `f( , ℳ)`, `P( , ℳ)` and `F( , ℳ)`.
-Here `f` is such that `f(q, ℳ)=0` when ``q∈ℳ``, `P(q, ℳ)` is the projection
-matrix ``ℝ^N→T_qℳ`` given by ``I-n(q)n(q)^T``, where ``n(q)=∇f(q)/|∇f(q)|``.
+Here `f` is such that `f(q, ℳ)=0` when ``q\\in\\mathcal{M}``.
+
+`P(q, ℳ)` is the projection matrix ``\\mathbb{R}^N \\to T_q\\mathcal{M}`` given
+by ``I-n(q)n(q)^T``, where ``n(q)=∇f(q)/|∇f(q)|``.
+
 `F(q, ℳ)` is the transformation from local coordinates `q` to global coordinates
-in ``ℝ^N``.
+in ``\\mathbb{R}^N``.
 """
 abstract type EmbeddedManifold <: Manifold end
 
 """
     TangentVector{T, TM}
 
-Elements of 𝑇ₓℳ and some vector-space operations.
+Elements of ``T_x\\mathcal{M}`` and equipped with vector space operations.
 """
 struct TangentVector{T,TM}
     x::T
@@ -66,8 +70,10 @@ Base.:*(α::Tα, X::TangentVector{T, TM}) where {Tα<:Real,T,TM} = X*α
 """
     Ellipse{T<:Real} <: EmbeddedManifold
 
-Settings for an ellipse as subset of ℝ². Elements satisfy ``(x/a)^2 + (y/b)^2 = 1``.
-For an object `𝔼 = Ellipse(a, b)`, we have
+Settings for an ellipse as subset of ``\\mathbb{R}^2``. Elements satisfy
+``(x/a)^2 + (y/b)^2 = 1``.
+
+For an object `𝔼 = Ellipse(a, b)`, one has
 
 - `` f(q, \\mathcal{𝔼}) = \\left(\\frac{q_1}{a}\\right)^2 + \\left(\\frac{q_2}{b}\\right)^2 - 1 ``
 - `` F(q, 𝔼) = \\begin{pmatrix} a\\cos q & b \\sin q\\end{pmatrix}``
@@ -108,14 +114,15 @@ end
 """
     Sphere{T<:Real} <: EmbeddedManifold
 
-Settings for the sphere 𝕊². Call `Sphere(R)` to generate a sphere with radius
-`R<:Real`. Elements satisfy ``x^2+y^2+z^2=R^2``. The local coordinates are modelled
-via a stereograpgical projection.
+Settings for the sphere ``\\mathbb{S}^2``. Call `Sphere(R)` to generate a sphere
+with radius `R<:Real`. Elements satisfy ``x^2+y^2+z^2=R^2``. The local coordinates
+are modelled via a stereograpgical projection.
 
-For a Sphere `𝕊 = Sphere(R)`, we have
+For a Sphere `𝕊 = Sphere(R)`, one has
 
 - ``f(q, 𝕊) = q_1^2+q_2^2-R^2``
 - ``F(q, 𝕊) = \\begin{pmatrix} \\frac{2q_1}{q_1^2+q_2^2+1} & \\frac{2q_2}{q_1^2+q_2^2+1} & \\frac{q_1^2+q_2^2-1}{q_1^2+q_2^2+1} \\end{pmatrix}``
+
 # Example: Generate a unit sphere
 ```julia-repl
 julia> 𝕊 = Sphere(1.0)
@@ -151,11 +158,11 @@ end
 """
     Torus{T<:Real} <: EmbeddedManifold
 
-Settings for the torus 𝕋² with inner radius ``r`` and outer radius ``R``. Call
-`Torus(R,r)` to generate a torus with inner radius `r<:Real` and outer radius `R<:Real`.
+Settings for the torus ``\\mathbb{T}^2`` with inner radius ``r`` and outer radius
+``R``. Call `Torus(R,r)` to generate a torus with inner radius `r<:Real` and outer radius `R<:Real`.
 Elements satisfy ``(x^2+y^2+z^2+R^2-r^2)^2=4R^2(x^2+y^2)``.
 
-For a Torus `𝕋 = Torus(R, r)`, we have
+For a Torus `𝕋 = Torus(R, r)`, one has
 
 - ``f(q, 𝕋) = (q_1^2+q_2^2+q_3^2+R^2-r^2)^2-4R^2(q_1^2+q_2^2)``
 - ``F(q, 𝕋) = \\begin{pmatrix} (R+r\\cos q_1)\\cos q_2 & (R+r\\cos q_1)\\sin q_2 & r\\sin q_1 \\end{pmatrix} ``
@@ -205,7 +212,7 @@ Settings for the Paraboloid. Call `Paraboloid(a,b)` to generate a paraboloid
 with parameters `a<:Real` and outer radius `b<:Real`.
 Elements satisfy ``(x/a)^2+(y/b)^2 = z``.
 
-For a paraboloid `ℙ = Paraboloid(a, b)`, we have
+For a paraboloid `ℙ = Paraboloid(a, b)`, one has
 
 - ``f(q, ℙ) = \\left(\\frac{q_1}{a}\\right)^2 + \\left(\\frac{q_2}{b}\\right)^2-q_3 ``
 - ``F(q, ℙ) = \\begin{pmatrix} q_1 & q_2 & \\left(\\frac{q_1}{a}\\right)^2 + \\left(\\frac{q_2}{b}\\right)^2 \\end{pmatrix} ``
@@ -247,8 +254,8 @@ end
 """
     g(q::T, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
 
-If `ℳ<:EmbeddedManifold` is given in local coordinates ``F:ℝ^d → ℝ^N``, we obtain
-a Riemannian metric. `g(q, ℳ)` returns the matrix ``\\mathrm{d}F^T\\mathrm{d}F``,
+If `ℳ<:EmbeddedManifold` is given in local coordinates ``F:\\mathbb{R}^d \\to \\mathbb{R}^N``
+, we obtain a Riemannian metric. `g(q, ℳ)` returns the matrix ``\\mathrm{d}F^T\\mathrm{d}F``,
 where ``\\mathrm{d}F`` denotes the Jacobian matrix for ``F`` in `q<:Union{AbstractArray, Real}`.
 """
 function g(q::T, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
@@ -269,10 +276,10 @@ end
 """
     Γ(q::T, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
 
-If `ℳ<:EmbeddedManifold` is given in local coordinates ``F:ℝ^d → ℝ^N``, we obtain
-Christoffel symbols ``Γ^i_{jk}`` for the Levi-Civita connection
+If `ℳ<:EmbeddedManifold` is given in local coordinates ``F:\\mathbb{R}^d \\to \\mathbb{R}^N``
+, we obtain Christoffel symbols ``Γ^i_{jk}`` for the Levi-Civita connection.
 
-In local coordinates `q`, `Γ(q, ℳ)` returns a matrix of size ``d×d×d`` where the
+In local coordinates `q`, `Γ(q, ℳ)` returns a matrix of size ``d\\times d\\times d`` where the
 element `[i,j,k]` corresponds to ``Γ^i_{jk}``.
 """
 function Γ(q::T, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}

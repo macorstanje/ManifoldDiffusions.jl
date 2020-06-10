@@ -53,7 +53,7 @@ end
 """
     ParallelTransport(γ, γ̇, V₀, tt, ℳ)
 
-returns the parallel transport of an initial  vector V₀, tangent to ℳ at ``γ(0)``,
+returns the parallel transport of an initial  vector V₀, tangent to ℳ at ``\\gamma_0``,
 along a curve `γ`. It is assumed γ and γ̇ are known on a discretized time interval `tt`
 """
 function ParallelTransport(γ, γ̇, V₀, tt, ℳ)

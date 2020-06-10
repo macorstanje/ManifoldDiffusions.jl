@@ -1,8 +1,8 @@
 """
     Frame{Tx, Tν, TM}
 
-Elements of ``\\mathrm{F}(ℳ)`` consist of a position `x::Tx` on `ℳ<:EmbeddedManifold` and a
-``\\mathrm{GL}(d, ℝ)``-matrix `ν::Tν` that consists of column vectors that form
+Elements of ``\\mathrm{F}(\\mathcal{M})`` consist of a position `x::Tx` on `ℳ<:EmbeddedManifold` and a
+``\\mathrm{GL}(d, \\mathbb{R})``-matrix `ν::Tν` that consists of column vectors that form
 a basis for T_xℳ. All input is assumed to be in local coordinates that coincide
 with `F( ,ℳ)`.
 
@@ -30,8 +30,9 @@ end
 """
     TangentFrame{Tx, Tν}
 
-A tangent vector ``(ẋ, ν̇) ∈ T_u\\mathrm{F}(ℳ)``. This object consists of the frame
-`u::Frame` that it is tangent to and the velocities `ẋ` and `ν̇`.
+A tangent vector ``(\\dot{x}, \\dot{\\nu}) \\in T_u\\mathrm{F}(\\mathcal{M})``.
+This object consists of the frame `u::Frame` that it is tangent to and the
+velocities `ẋ` and `ν̇`.
 
 # Example:
 ```julia-repl
@@ -86,15 +87,16 @@ end
 """
     Π(u::Frame)
 
-Canonical projection ``Π: \\mathrm{F}(ℳ) → ℳ`` that maps ``(x,ν)`` to ``x``.
+Canonical projection ``Π: \\mathrm{F}(\\mathcal{M}) \\to \\mathcal{M}`` that
+maps ``(x,\\nu)`` to ``x``.
 """
 Π(u::Frame{Tx, Tν, TM}) where {Tx,Tν, TM} = u.x
 
 """
     Πˣ(X::TangentFrame)
 
-Pushforward map of the canonocal projection ``Π^*: T\\mathrm{F}(ℳ) → Tℳ`` that
-maps ``(ẋ, ν̇)`` to ``ẋ``
+Pushforward map of the canonocal projection ``Π^*: T\\mathrm{F}(\\mathcal{M})
+\\to T\\mathcal{M}`` that maps ``(\\dot{x}, \\dot{\\nu})`` to ``\\dot{x}``
 """
 Πˣ(X::TangentFrame{Tx, Tν}) where {Tx, Tν} = X.ẋ
 
@@ -107,8 +109,8 @@ Pˣ(u::Frame, ℳ::T) where {T<:EmbeddedManifold} = TangentFrame(u, u.x, P(u.x, 
 """
     Hor(i::Int64, u::Frame, ℳ::TM) where {TM<:EmbeddedManifold}
 
-Returns the horizontal vector ``H_i(u)`` in ``T_u\\mathrm{F}(ℳ)`` as an element
-of type `TangentFrame`.
+Returns the horizontal vector ``H_i(u)`` in ``T_u\\mathrm{F}(\\mathcal{M})`` as
+an element of type `TangentFrame`.
 """
 function Hor(i::Int64, u::Frame, ℳ::TM) where {TM<:EmbeddedManifold}
     x, ν = u.x, u.ν
