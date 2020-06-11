@@ -106,6 +106,9 @@ struct SamplePath{T} <: AbstractPath{T}
 end
 SamplePath(tt, yy::Vector{T}) where {T} = SamplePath{T}(tt, yy)
 
+ismutable(el) = ismutable(typeof(el))
+ismutable(::Type) = Val(false)
+ismutable(::Type{<:Array}) = Val(true)
 samplepath(tt, v) = samplepath(tt, v, ismutable(v))
 
 samplepath(tt, v, ::Val{false}) = SamplePath(tt, fill(v, length(tt)))
