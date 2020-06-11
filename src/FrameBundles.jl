@@ -98,27 +98,27 @@ end
 
 
 # Copied from Moritz Schauer, Bridge.jl
-abstract type AbstractPath{T} end
-
-import Base: length
-struct SamplePath{T} <: AbstractPath{T}
-    tt::Vector{Float64}
-    yy::Vector{T}
-    SamplePath{T}(tt, yy) where {T} = new(tt, yy)
-end
-SamplePath(tt, yy::Vector{T}) where {T} = SamplePath{T}(tt, yy)
-
-ismutable(el) = ismutable(typeof(el))
-ismutable(::Type) = Val(false)
-ismutable(::Type{<:Array}) = Val(true)
-samplepath(tt, v) = samplepath(tt, v, ismutable(v))
-
-samplepath(tt, v, ::Val{false}) = SamplePath(tt, fill(v, length(tt)))
-samplepath(tt, v, ::Val{true}) = SamplePath(tt, [copy(v) for t in tt])
-
-
-copy(X::SamplePath{T}) where {T} = SamplePath{T}(copy(X.tt), copy(X.yy))
-length(X::SamplePath) = length(X.tt)
+# abstract type AbstractPath{T} end
+#
+# import Base: length
+# struct SamplePath{T} <: AbstractPath{T}
+#     tt::Vector{Float64}
+#     yy::Vector{T}
+#     SamplePath{T}(tt, yy) where {T} = new(tt, yy)
+# end
+# SamplePath(tt, yy::Vector{T}) where {T} = SamplePath{T}(tt, yy)
+#
+# ismutable(el) = ismutable(typeof(el))
+# ismutable(::Type) = Val(false)
+# ismutable(::Type{<:Array}) = Val(true)
+# samplepath(tt, v) = samplepath(tt, v, ismutable(v))
+#
+# samplepath(tt, v, ::Val{false}) = SamplePath(tt, fill(v, length(tt)))
+# samplepath(tt, v, ::Val{true}) = SamplePath(tt, [copy(v) for t in tt])
+#
+#
+# copy(X::SamplePath{T}) where {T} = SamplePath{T}(copy(X.tt), copy(X.yy))
+# length(X::SamplePath) = length(X.tt)
 """
     StochasticDevelopment!(Y, W, u₀, ℳ; drift)
 
@@ -146,5 +146,5 @@ function StochasticDevelopment!(Y, W, u₀, ℳ; drift)
 end
 
 function StochasticDevelopment(W, u₀, ℳ; drift)
-    let X = samplepath(W.tt, zero(u₀)); StochasticDevelopment!(X, W, u₀,ℳ; drift = drift); X end
+    let X = Bridge.samplepath(W.tt, zero(u₀)); StochasticDevelopment!(X, W, u₀,ℳ; drift = drift); X end
 end
