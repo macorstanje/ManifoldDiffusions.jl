@@ -25,6 +25,7 @@ module ManifoldDiffusions
     using LinearAlgebra
     using StaticArrays
     using Einsum
+    using Bridge
 
     # Definitions of the manifolds additional properties
     include("Definitions.jl")
