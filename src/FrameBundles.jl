@@ -141,5 +141,5 @@ function StochasticDevelopment!(Y, W, u₀, ℳ; drift)
 end
 
 function StochasticDevelopment(W, u₀, ℳ; drift)
-    let X = Bridge.samplepath(W.tt, zero(u₀)); StochasticDevelopment!(X, W, u₀,ℳ; drift = drift); X end
+    let X = samplepath(W.tt, zero(u₀)); StochasticDevelopment!(X, W, u₀,ℳ; drift = drift); X end
 end
