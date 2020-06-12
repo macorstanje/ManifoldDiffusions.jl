@@ -119,6 +119,10 @@ end
 #
 # copy(X::SamplePath{T}) where {T} = SamplePath{T}(copy(X.tt), copy(X.yy))
 # length(X::SamplePath) = length(X.tt)
+
+
+Vᵒ(t, y, ::EmbeddedManifold) = error("custom EmbeddedManifold must define a method for Vᵒ")
+
 """
     StochasticDevelopment!(Y, W, u₀, ℳ; drift)
 
@@ -126,7 +130,7 @@ Simulate the process ``\\{U_t\\}_t`` on ``\\mathrm{F}(\\mathcal{M})`` starting a
 `u₀` that solves the SDE ``\\mathrm{d}U_t = V^*(U_t)\\mathrm{d}t+H(U_t) \\circ \\mathrm{d}W_t``
 This function writes the process in `Fℳ` in place of `Y`
 """
-function StochasticDevelopment!(Y, W, u₀, ℳ; drift)
+function StochasticDevelopment!(Y, W, u₀, ℳ<:EmbeddedManifold; drift)
     tt = W.tt
     ww = W.yy
     yy = Y.yy
