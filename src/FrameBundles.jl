@@ -130,7 +130,7 @@ Simulate the process ``\\{U_t\\}_t`` on ``\\mathrm{F}(\\mathcal{M})`` starting a
 `u₀` that solves the SDE ``\\mathrm{d}U_t = V^*(U_t)\\mathrm{d}t+H(U_t) \\circ \\mathrm{d}W_t``
 This function writes the process in `Fℳ` in place of `Y`
 """
-function StochasticDevelopment!(Y, W, u₀, ℳ<:EmbeddedManifold; drift)
+function StochasticDevelopment!(Y, W, u₀, ℳ::TM; drift) where {TM<:EmbeddedManifold}
     tt = W.tt
     ww = W.yy
     yy = Y.yy
