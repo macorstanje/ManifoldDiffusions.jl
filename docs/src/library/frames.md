@@ -6,14 +6,16 @@ CurrentModule = ManifoldDiffusions
 
 ```@docs
 Frame
+getx
 TangentFrame
 Π
 Πˣ
 Hor
+FrameBundle
 ```
 
 ```@docs
-FrameBundle
-Hamiltonian
+SDESolver
+Heun
 StochasticDevelopment!
 ```

@@ -5,10 +5,6 @@ Abstract (super-)type under which all speficic manifolds fall
 """
 abstract type Manifold end
 
-# abstract type SDEForm end
-# struct Ito <: SDEForm end
-# struct Stratonovich <: SDEForm end
-
 const ℝ{N} = SVector{N, Float64}
 const IndexedTime = Tuple{Int64,Float64}
 outer(x) = x*x'
@@ -18,26 +14,37 @@ extractcomp(v, i) = map(x->x[i], v)
 """
     EmbeddedManifold <: Manifold
 
-EmbeddedManifold creates a manifold ``\\mathcal{M} = f^{-1}(\\{0\\})`` of
-dimension ``d=N-n`` where ``f`` should be a smooth function
-``\\mathbb{R}^N \\to \\mathbb{R}^n``. An EmbeddedManifold `ℳ` can be equipped
-equipped with functions `f( , ℳ)`, `P( , ℳ)` and `F( , ℳ)`.
-Here `f` is such that `f(q, ℳ)=0` when ``q\\in\\mathcal{M}``.
-
-`P(q, ℳ)` is the projection matrix ``\\mathbb{R}^N \\to T_q\\mathcal{M}`` given
-by ``I-n(q)n(q)^T``, where ``n(q)=∇f(q)/|∇f(q)|``.
-
-`F(q, ℳ)` is the transformation from local coordinates `q` to global coordinates
-in ``\\mathbb{R}^N``.
+`EmbeddedManifold` is a manifold embedded in ``\\mathbb{R}^N``
 """
 abstract type EmbeddedManifold <: Manifold end
 
 """
+    Dimension(ℳ::TM) where {TM<:EmbeddedManifold}
+
+Returns the dimension of the manifold 'ℳ'
+"""
+function Dimension(ℳ::TM) where {TM<:Manifold}
+end
+
+"""
+    AmbiantDimension(ℳ::TM) where {TM<:EmbeddedManifold}
+
+Returns the dimension of the ambient space of the manifold 'ℳ'
+"""
+function AmbientDimension(ℳ::TM) where {TM<:EmbeddedManifold}
+end
+
+"""
     TangentVector{T, TM}
 
-Elements of ``T_x\\mathcal{M}`` and equipped with vector space operations.
+Elements of ``T_x\\mathcal{M}`` and equipped with vector space operations. Given `x`
+and `ẋ` in ``\\mathbb{R}^N`` and an `EmbeddedManifold` `ℳ` with ambient dimension `N`,
+use `X=TangentVector(x,ẋ,ℳ)` to create a tangent vector. 
+
+Since ``T_x\\mathcal{M}`` is a vector space, `TangentVector`s allow for addition and 
+scalar multiplication. 
 """
-struct TangentVector{T,TM}
+struct TangentVector{T<:AbstractArray,TM<:EmbeddedManifold}
     x::T
     ẋ::T
     ℳ::TM
@@ -51,256 +58,170 @@ function Base.:+(X::TangentVector{T,TM}, Y::TangentVector{T,TM}) where {T,TM}
     if X.x != Y.x || X.ℳ != Y.ℳ
         error("X and Y are not in the same tangent space")
     end
-    return TangentVector(X.x, X.v+Y.v, X.ℳ)
+    return TangentVector(X.x, X.ẋ+Y.ẋ, X.ℳ)
 end
 
 function Base.:-(X::TangentVector{T,TM}, Y::TangentVector{T,TM}) where {T,TM}
     if X.x != Y.x || X.ℳ != Y.ℳ
         error("X and Y are not in the same tangent space")
     end
-    return TangentVector(X.x, X.v-Y.v, X.ℳ)
+    return TangentVector(X.x, X.ẋ-Y.ẋ, X.ℳ)
 end
 
 function Base.:*(X::TangentVector{T, TM}, α::Tα) where {Tα<:Real,T,TM}
-    return TangentVector(X.x, α.*X.v, X.ℳ)
+    return TangentVector(X.x, α.*X.ẋ, X.ℳ)
 end
 Base.:*(α::Tα, X::TangentVector{T, TM}) where {Tα<:Real,T,TM} = X*α
 
+"""
+    RegularSumbanifold <: EmbeddedManifold
+    
+Supertype for regular submanifolds.
+"""
+abstract type RegularSubmanifold <: EmbeddedManifold end
 
 """
-    Ellipse{T<:Real} <: EmbeddedManifold
+    f(x::T, ℳ::TM) where {T<:AbstractArray, TM<:RegularSubmanifold}
 
-Settings for an ellipse as subset of ``\\mathbb{R}^2``. Elements satisfy
-``(x/a)^2 + (y/b)^2 = 1``.
-
-For an object `𝔼 = Ellipse(a, b)`, one has
-
-- `` f(q, \\mathcal{𝔼}) = \\left(\\frac{q_1}{a}\\right)^2 + \\left(\\frac{q_2}{b}\\right)^2 - 1 ``
-- `` F(q, 𝔼) = \\begin{pmatrix} a\\cos q & b \\sin q\\end{pmatrix}``
-
-# Example: Generate a unit circle
-```julia-repl
-julia> 𝔼 = Ellipse(1.0, 1.0)
-```
+Function that describes the embedding of 'ℳ' in the ambient space. 'f' is so
+that ''ℳ = f^{-1}(\\{ 0 \\})''
 """
-struct Ellipse{T<:Real} <: EmbeddedManifold
-    a::T
-    b::T
-
-    function Ellipse(a::T, b::T) where {T<:Real}
-        if a<=0 || b<=0
-            error("a and b must be positive")
-        end
-        new{T}(a,b)
-    end
-end
-
-function f(q::T, 𝔼::Ellipse) where {T<:AbstractArray}
-    (q[1]/𝔼.a)^2 + (q[2]/𝔼.b)^2 - 1.0
-end
-
-function P(q::T, 𝔼::Ellipse) where {T<:AbstractArray}
-    x, y, a, b = q[1], q[2], 𝔼.a, 𝔼.b
-    ∇f = 2.0.*[x/(a^2) , y/(b^2)]
-    n = ∇f./norm(∇f)
-    return Matrix{eltype(n)}(I,2,2) - n*n'
-end
-
-function F(θ::T, 𝔼::Ellipse) where {T<:Real}
-    [𝔼.a*cos.(θ) , 𝔼.b*sin.(θ)]
-end
-
-
-"""
-    Sphere{T<:Real} <: EmbeddedManifold
-
-Settings for the sphere ``\\mathbb{S}^2``. Call `Sphere(R)` to generate a sphere
-with radius `R<:Real`. Elements satisfy ``x^2+y^2+z^2=R^2``. The local coordinates
-are modelled via a stereograpgical projection.
-
-For a Sphere `𝕊 = Sphere(R)`, one has
-
-- ``f(q, 𝕊) = q_1^2+q_2^2-R^2``
-- ``F(q, 𝕊) = \\begin{pmatrix} \\frac{2q_1}{q_1^2+q_2^2+1} & \\frac{2q_2}{q_1^2+q_2^2+1} & \\frac{q_1^2+q_2^2-1}{q_1^2+q_2^2+1} \\end{pmatrix}``
-
-# Example: Generate a unit sphere
-```julia-repl
-julia> 𝕊 = Sphere(1.0)
-```
-"""
-struct Sphere{T<:Real} <: EmbeddedManifold
-    R::T
-
-    function Sphere(R::T) where {T<:Real}
-        if R<=0
-            error("R must be positive")
-        end
-        new{T}(R)
-    end
-end
-
-function f(q::T, 𝕊::Sphere) where {T<:AbstractArray}
-    q[1]^2+q[2]^2+q[3]^2-𝕊.R^2
-end
-
-# Projection matrix
-function P(q::T, 𝕊::Sphere) where {T<:AbstractArray}
-    R, x, y, z = 𝕊.R, q[1], q[2], q[3]
-    return [4*R^2-x^2 -x*y -x*z ; -x*y 4*R^2-y^2 -y*z ; -x*z -y*z 4*R^2-z^2]./(4*R^2)
-end
-
-# Stereographical projection
-function F(q::T, 𝕊::Sphere) where {T<:AbstractArray}
-    R, u, v = 𝕊.R, q[1], q[2]
-    return [ 2*u/(u^2+v^2+1) , 2*v/(u^2+v^2+1) , (u^2+v^2-1)/(u^2+v^2+1)  ]
+function f(x::T, ℳ::TM) where {T<:AbstractArray, TM<:RegularSubmanifold}
 end
 
 """
-    Torus{T<:Real} <: EmbeddedManifold
+    P(x::T, ℳ::TM) where {T<:AbstractArray, TM<:RegularSubmanifold}
 
-Settings for the torus ``\\mathbb{T}^2`` with inner radius ``r`` and outer radius
-``R``. Call `Torus(R,r)` to generate a torus with inner radius `r<:Real` and outer radius `R<:Real`.
-Elements satisfy ``(x^2+y^2+z^2+R^2-r^2)^2=4R^2(x^2+y^2)``.
-
-For a Torus `𝕋 = Torus(R, r)`, one has
-
-- ``f(q, 𝕋) = (q_1^2+q_2^2+q_3^2+R^2-r^2)^2-4R^2(q_1^2+q_2^2)``
-- ``F(q, 𝕋) = \\begin{pmatrix} (R+r\\cos q_1)\\cos q_2 & (R+r\\cos q_1)\\sin q_2 & r\\sin q_1 \\end{pmatrix} ``
-
-# Example: Generate a torus with ``R=3`` and ``r=1``
-```julia-repl
-julia> 𝕋 = Torus(3.0, 1.0)
-```
+The projection matrix ``\\mathbb{R}^N \\to T_x\\mathcal{M}`` given
+by ``I-n(x)n(x)^T``, where ``n(x)=∇f(x)/|∇f(x)|``.
 """
-struct Torus{T<:Real} <: EmbeddedManifold
-    R::T
-    r::T
-
-    function Torus(R::T, r::T) where {T<:Real}
-        if R<r
-            error("R must be larger than or equal to r")
-        end
-        new{T}(R,r)
-    end
+function P(x::T, ℳ::TM) where {T<:AbstractArray, TM<:RegularSubmanifold}
 end
 
-function f(x::T, 𝕋::Torus) where {T<:AbstractArray}
-    R, r, x, y, z = 𝕋.R, 𝕋.r, x[1], x[2], x[3]
-    (x^2 + y^2 + z^2 + R^2 - r^2)^2 - 4.0*R^2*(x^2 + y^2)
-end
+ """   
+    nCharts(ℳ::TM) where {TM<:Manifold}
 
-# Projection matrix
-function P(x::T, 𝕋::Torus) where {T<:AbstractArray}
-    R, r, x, y, z = 𝕋.R, 𝕋.r, x[1], x[2], x[3]
-    ∇f = [  4*x*(x^2+y^2+z^2+R^2-r^2) - 8*R^2*x,
-            4*y*(x^2+y^2+z^2+R^2-r^2) - 8*R^2*y,
-            4*z*(x^2+y^2+z^2+R^2-r^2)]# ForwardDiff.gradient((y)->f(y, 𝕋), x)
-    n = ∇f./norm(∇f)
-    return Matrix{eltype(n)}(I,3,3) .- n*n'
-end
-
-function F(x::T, 𝕋::Torus) where {T<:AbstractArray}
-    R, r, u, v = 𝕋.R, 𝕋.r, x[1], x[2]
-    return [(R+r*cos(u))*cos(v) , (R+r*cos(u))*sin(v) , r*sin(u)]
-end
-
-
+Returns the amount of charts the manifold 'ℳ' has
 """
-    Paraboloid{T<:Real} <: EmbeddedManifold
-
-Settings for the Paraboloid. Call `Paraboloid(a,b)` to generate a paraboloid
-with parameters `a<:Real` and outer radius `b<:Real`.
-Elements satisfy ``(x/a)^2+(y/b)^2 = z``.
-
-For a paraboloid `ℙ = Paraboloid(a, b)`, one has
-
-- ``f(q, ℙ) = \\left(\\frac{q_1}{a}\\right)^2 + \\left(\\frac{q_2}{b}\\right)^2-q_3 ``
-- ``F(q, ℙ) = \\begin{pmatrix} q_1 & q_2 & \\left(\\frac{q_1}{a}\\right)^2 + \\left(\\frac{q_2}{b}\\right)^2 \\end{pmatrix} ``
-
-# Example: Generate a torus with ``a=0`` and ``b=1``
-```julia-repl
-julia> ℙ = Parabolod(3.0, 1.0)
-```
-"""
-struct Paraboloid{T<:Real} <: EmbeddedManifold
-    a::T
-    b::T
-
-    function Paraboloid(a::T, b::T) where {T<:Real}
-        if a == 0 || b == 0
-            error("parameters cannot be 0")
-        end
-        new{T}(a, b)
-    end
-end
-
-function f(x::T, ℙ::Paraboloid) where {T<:AbstractArray}
-    a, b, x, y, z = ℙ.a, ℙ.b, x[1], x[2], x[3]
-    return (x/a)^2 + (y/b)^2 - z
-end
-
-function P(x::T, ℙ::Paraboloid) where {T<:AbstractArray}
-    a, b, x, y, z = ℙ.a, ℙ.b, x[1], x[2], x[3]
-    ∇f = [2*x/a, 2*y/b , -1]
-    n = ∇f./norm(∇f)
-    return Matrix{eltype(n)}(I,3,3) .- n*n'
-end
-
-function F(q::T, ℙ::Paraboloid) where {T<:AbstractArray}
-    a, b, u, v = ℙ.a, ℙ.b, q[1], q[2]
-    return [u, v, (u/a)^2+(v/b)^2]
+function nCharts(ℳ::TM) where {TM<:Manifold}
 end
 
 """
-    g(q::T, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
+    inChart(x::T , ℳ::TM) where {T<:AbstractArray, TM<:EmbeddedManifold}
 
-If `ℳ<:EmbeddedManifold` is given in local coordinates ``F:\\mathbb{R}^d \\to \\mathbb{R}^N``
-, we obtain a Riemannian metric. `g(q, ℳ)` returns the matrix ``\\mathrm{d}F^T\\mathrm{d}F``,
-where ``\\mathrm{d}F`` denotes the Jacobian matrix for ``F`` in `q<:Union{AbstractArray, Real}`.
+Yields a vector of Booleans where entry `i` is true if the point `x` in the
+ambient space lies in chart ``U_i``
 """
-function g(q::T, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
-    if length(q) == 1
-        J = ForwardDiff.derivative((p) -> F(p, ℳ), q)
+function inChart end
+# function inChart(x::T, ℳ::TM) where {T<:AbstractArray, TM<:EmbeddedManifold}
+# end
+"""
+    inChartRange(q::T , ℳ::TM) where {T<:AbstractArray, TM<:EmbeddedManifold}
+
+Yields a vector of Booleans where entry `i` is true if the point `q` in ℝᵈ lies in the
+range of chart ``U_i``
+"""
+function inChartRange end
+
+"""
+    ϕ(x::T, i::Int64, ℳ::TM) where {T<:AbstractArray, TM<:EmbeddedManifold}
+
+Defines the map ``U_i \\to \\mathbb{R}^d`` from global to local coordinates
+"""
+function ϕ(x::T, i::Int64, ℳ::TM) where {T<:AbstractArray, TM<:Manifold}
+end
+
+"""
+    ϕ⁻¹(q::T, i::Int64, ℳ::TM) where {T<:AbstractArray, TM<:EmbeddedManifold}
+
+Defines the inverse map ``\\mathbb{R}^d \\to U_i`` of 'ϕ' from local to global
+coordinates.
+"""
+function ϕ⁻¹(q::T, i::Int64, ℳ::TM) where {T<:AbstractArray, TM<:Manifold}
+end
+
+"""
+    Dϕ(x::T, i::Int64, ℳ::TM) where {T<:AbstractArray, TM<:Manifold}
+
+Defines the Jacobian matrix of `ϕ`
+"""
+function Dϕ(x::T, i::Int64, ℳ::TM) where {T<:AbstractArray, TM<:Manifold}
+    if length(x) == 1
+        J = ForwardDiff.derivative((p) -> ϕ(p,i, ℳ), x)
     else
-        J = ForwardDiff.jacobian((p) -> F(p, ℳ), q)
+        J = ForwardDiff.jacobian((p) -> ϕ(p,i, ℳ), x)
     end
+    return J
+end
+
+"""
+    Dϕ⁻¹(q::T, i::Int64, ℳ::TM) where {T<:AbstractArray, TM<:Manifold}
+
+Defines the Jacobian matrix of `ϕ⁻¹`
+"""
+function Dϕ⁻¹(q::T, i::Int64, ℳ::TM) where {T<:AbstractArray, TM<:Manifold}
+    if length(q) == 1
+        J = ForwardDiff.derivative((p) -> ϕ⁻¹(p,i, ℳ), q)
+    else
+        J = ForwardDiff.jacobian((p) -> ϕ⁻¹(p,i, ℳ), q)
+    end
+    return J
+end
+
+"""
+    g(q::T, i::Int64, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
+
+If `ℳ<:EmbeddedManifold` is given in local coordinates
+``\\phi^{-1}:\\mathbb{R}^d \\to \\mathbb{R}^N`` in chart ``U_i``, we obtain a
+Riemannian metric. `g(q,i, ℳ)` returns the matrix
+``D\\phi^{-1}^T D\\phi^{-1}``,where ``D\\phi^{-1}``
+denotes the Jacobian matrix for ``\\phi^{-1}`` in `q<:Union{AbstractArray, Real}`.
+"""
+function g(q::T, i::Int64, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
+    # q = ϕ(x,i,ℳ)
+    J = Dϕ⁻¹(q,i,ℳ)
     return J'*J
 end
 
-# Returns the cometric
-function gˣ(q::T, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
-    return inv(g(q, ℳ))
+"""
+    g♯(q::T, i::Int64,ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
+
+Riemannian cometric, the inverse matrix of `g(q,i,ℳ)`.
+"""
+function g♯(q::T, i::Int64,ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
+    return inv(g(q, i,ℳ))
 end
 
-
 """
-    Γ(q::T, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
+    Γ(q::T, n::Int64, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
 
-If `ℳ<:EmbeddedManifold` is given in local coordinates ``F:\\mathbb{R}^d \\to \\mathbb{R}^N``
-, we obtain Christoffel symbols ``Γ^i_{jk}`` for the Levi-Civita connection.
+Christoffel symbols ``Γ^i_{jk}`` for the Levi-Civita connection in chart `n`.
 
-In local coordinates `q`, `Γ(q, ℳ)` returns a matrix of size ``d\\times d\\times d`` where the
-element `[i,j,k]` corresponds to ``Γ^i_{jk}``.
+Given `q` in chart `n`, `Γ(q, n, ℳ)` returns a matrix of size ``d\\times d\\times d`` where the
+element `[i,j,k]` corresponds to ``Γ^i_{jk}`` and `d=Dimension(ℳ)`.
 """
-function Γ(q::T, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
+function Γ(q::T, n::Int64, ℳ::TM) where {T<:Union{AbstractArray, Real}, TM<:EmbeddedManifold}
     d = length(q)
+    @assert d==Dimension(ℳ) "q is not of the same dimension as ℳ"
     if d == 1
-        ∂g = ForwardDiff.derivative(x -> g(x,ℳ), q)
-        g⁻¹ = 1/g(q, ℳ)
+        ∂g = ForwardDiff.derivative(y -> g(y,n,ℳ), q)
+        g⁻¹ = 1/g(q,n,ℳ)
         return .5*g⁻¹*∂g
     else
-        ∂g = reshape(ForwardDiff.jacobian(x -> g(x,ℳ), q), d, d, d)
-        g⁻¹ = gˣ(q, ℳ)
+        ∂g = reshape(ForwardDiff.jacobian(y -> g(y,n,ℳ), q), d, d, d)
+        g⁻¹ = g♯(q,n,ℳ)
         @einsum out[i,j,k] := .5*g⁻¹[i,l]*(∂g[k,l,i] + ∂g[l,j,k] - ∂g[j,k,l])
         return out
     end
 end
 
 """
-    Hamiltonian(x::Tx, p::Tp, ℳ::TM) where {Tx, Tp <: Union{AbstractArray, Real}, TM <: EmbeddedManifold}
+    Hamiltonian(x::Tx, p::Tp, n::Int64, ℳ::TM) where {Tx, Tp <: Union{AbstractArray, Real}, TM <: EmbeddedManifold}
 
 Returns the Hamiltonian induced by the Riemannian metric for a tangent vector `p` to `ℳ` at `x`
 """
-function Hamiltonian(x::Tx, p::Tp, ℳ::TM) where {Tx, Tp <: Union{AbstractArray, Real}, TM <: EmbeddedManifold}
-    .5*p'*gˣ(x, ℳ)*p
+function Hamiltonian(x::Tx, X::TangentVector, ℳ::TM) where {Tx<: Union{AbstractArray, Real}, TM <: Manifold}
+    n = rand(findall(==(1), inChart(x,ℳ)))
+    q = ϕ(x, n, ℳ) ; p = Dϕ(x,n,ℳ)*X.ẋ
+    return .5*p'*g♯(q, n, ℳ)*p
  end
